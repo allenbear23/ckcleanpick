@@ -1797,8 +1797,194 @@
                 });
         }
 
+        function generateLineFlexMessage() {
+            if (!latestResults.length) return null;
+
+            const bubbleContents = [];
+
+            // 1. Cadres box section
+            const cadreRows = [];
+            [
+                ["衛生股長", roles.hygieneLead],
+                ["環保股長", roles.envLead],
+                ["衛生幹事", roles.hygieneOfficer]
+            ].forEach(([title, obj]) => {
+                cadreRows.push({
+                    type: "box",
+                    layout: "horizontal",
+                    margin: "sm",
+                    contents: [
+                        {
+                            type: "text",
+                            text: title,
+                            size: "xs",
+                            color: "#9ca3af",
+                            flex: 3
+                        },
+                        {
+                            type: "text",
+                            text: obj ? `${pad2(obj.seat)} ${obj.name}` : "（未指定）",
+                            size: "xs",
+                            color: "#f3f4f6",
+                            weight: "bold",
+                            flex: 7
+                        }
+                    ]
+                });
+            });
+
+            bubbleContents.push({
+                type: "text",
+                text: "👥 班級衛生幹部",
+                weight: "bold",
+                size: "sm",
+                color: "#3b82f6"
+            });
+            bubbleContents.push({
+                type: "box",
+                layout: "vertical",
+                margin: "md",
+                contents: cadreRows
+            });
+            bubbleContents.push({
+                type: "separator",
+                margin: "lg"
+            });
+
+            // 2. Sweep Areas box section
+            const areaRows = [];
+            latestResults.forEach(a => {
+                const membersStr = a.members.map(m => typeof m === 'string' ? m : `${pad2(m.seat)} ${m.name}`).join("、");
+                areaRows.push({
+                    type: "box",
+                    layout: "horizontal",
+                    margin: "md",
+                    contents: [
+                        {
+                            type: "text",
+                            text: a.name,
+                            size: "xs",
+                            color: "#f3f4f6",
+                            weight: "bold",
+                            flex: 4,
+                            wrap: true
+                        },
+                        {
+                            type: "text",
+                            text: membersStr || "（無人分派）",
+                            size: "xs",
+                            color: "#10b981",
+                            flex: 6,
+                            wrap: true
+                        }
+                    ]
+                });
+            });
+
+            bubbleContents.push({
+                type: "text",
+                text: "📋 掃區分配名單",
+                weight: "bold",
+                size: "sm",
+                color: "#8b5cf6",
+                margin: "lg"
+            });
+            bubbleContents.push({
+                type: "box",
+                layout: "vertical",
+                contents: areaRows
+            });
+            bubbleContents.push({
+                type: "separator",
+                margin: "lg"
+            });
+
+            // 3. Standby section
+            const standbyStr = standby.map(m => `${pad2(m.seat)} ${m.name}`).join("、");
+            bubbleContents.push({
+                type: "text",
+                text: "💤 候補名單（本日休息）",
+                weight: "bold",
+                size: "sm",
+                color: "#f59e0b",
+                margin: "lg"
+            });
+            bubbleContents.push({
+                type: "text",
+                text: standbyStr || "本日無候補人員，全員上工！",
+                size: "xs",
+                color: "#f3f4f6",
+                margin: "sm",
+                wrap: true
+            });
+
+            // Build full Bubble payload
+            const payload = {
+                type: "flex",
+                altText: `🧹 掃地工作分配結果已出爐！適用日期：${dateLabel}`,
+                contents: {
+                  type: "bubble",
+                  styles: {
+                    header: {
+                      backgroundColor: "#111827"
+                    },
+                    body: {
+                      backgroundColor: "#1f2937"
+                    },
+                    footer: {
+                      backgroundColor: "#111827",
+                      separator: true,
+                      separatorColor: "#374151"
+                    }
+                  },
+                  header: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                      {
+                        type: "text",
+                        text: isRocMode ? "🇹🇼 班級自治整潔勞動派遣令 🇹🇼" : "🧹 班級掃地工作分配",
+                        weight: "bold",
+                        size: "md",
+                        color: isRocMode ? "#facc15" : "#ffffff"
+                      },
+                      {
+                        type: "text",
+                        text: `📅 適用日期：${dateLabel}`,
+                        size: "xs",
+                        color: "#9ca3af",
+                        margin: "xs"
+                      }
+                    ]
+                  },
+                  body: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: bubbleContents
+                  },
+                  footer: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                      {
+                        type: "text",
+                        text: isRocMode 
+                            ? "📢 責任榮譽！請準時清潔，爭取整潔秩序榮譽紅旗！" 
+                            : "大家辛苦了！放學後請將負責區域清理乾淨！💪✨",
+                        size: "xxs",
+                        color: "#9ca3af",
+                        align: "center",
+                        wrap: true
+                      }
+                    ]
+                  }
+                }
+            };
+            return payload;
+        }
+
         function sendToLineVercel() {
-            if (!lineMessageText) return;
+            if (!latestResults.length) return;
 
             const pushBtn = document.getElementById('vercelPushBtn');
             const localGroupId = localStorage.getItem('clean_local_group_id');
@@ -1806,12 +1992,15 @@
             pushBtn.disabled = true;
             pushBtn.innerHTML = '⏳ 正在傳送至 LINE...';
 
+            const flexPayload = generateLineFlexMessage();
+
             fetch('/api/push', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    messages: [ flexPayload ],
                     message: lineMessageText,
                     groupId: localGroupId || ""
                 })

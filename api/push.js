@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { message, groupId } = req.body;
+    const { message, messages, groupId } = req.body;
     
     const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
     const targetGroupId = groupId || process.env.LINE_GROUP_ID;
@@ -41,7 +41,17 @@ module.exports = async (req, res) => {
       });
     }
 
-    if (!message) {
+    let finalMessages = [];
+    if (messages && Array.isArray(messages) && messages.length > 0) {
+      finalMessages = messages;
+    } else if (message) {
+      finalMessages = [
+        {
+          type: 'text',
+          text: message
+        }
+      ];
+    } else {
       return res.status(400).json({ error: 'Message content is missing.' });
     }
 
@@ -54,12 +64,7 @@ module.exports = async (req, res) => {
       },
       body: JSON.stringify({
         to: targetGroupId,
-        messages: [
-          {
-            type: 'text',
-            text: message
-          }
-        ]
+        messages: finalMessages
       })
     });
 
