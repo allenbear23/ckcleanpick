@@ -1,0 +1,2056 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班級掃區自動分配系統 2.0 (Vercel 獨立安全版 & Excel 匯入)</title>
+    <!-- Google Fonts: Inter, Outfit, Noto Sans TC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti & SheetJS -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(17, 24, 39, 0.75);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.3);
+            --accent: #8b5cf6;
+            --accent-glow: rgba(139, 92, 246, 0.3);
+            --success: #10b981;
+            --line-color: #06C755;
+            --line-hover: #05b04b;
+            --danger: #ef4444;
+            --card-bg: rgba(31, 41, 55, 0.5);
+            --font-main: 'Outfit', 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --dropzone-border: rgba(255, 255, 255, 0.15);
+            --btn-shadow: rgba(59, 130, 246, 0.25);
+            --table-border: rgba(255, 255, 255, 0.06);
+            --table-header-bg: rgba(255, 255, 255, 0.02);
+            --pill-bg: rgba(59, 130, 246, 0.15);
+            --pill-color: #60a5fa;
+            --note-bg: rgba(245, 158, 11, 0.1);
+            --note-border: rgba(245, 158, 11, 0.2);
+        }
+
+        /* 經典華國美學風格變數 (當切換到華國美學時使用) */
+        .roc-mode {
+            --bg-color: #d3d3d3;
+            --panel-bg: #f0f0f0;
+            --panel-border: 2px outset #ffffff;
+            --text-primary: #000000;
+            --text-secondary: #333333;
+            --primary: #000080;
+            --primary-glow: none;
+            --accent: #800000;
+            --accent-glow: none;
+            --success: #008000;
+            --danger: #ff0000;
+            --card-bg: #e0e0e0;
+            --font-main: "MingLiU", "PMingLiU", "DFKai-SB", "Microsoft JhengHei", serif;
+            --dropzone-border: #808080;
+            --table-border: #808080;
+            --table-header-bg: #d3d3d3;
+            --pill-bg: #eef2ff;
+            --pill-color: #1e3a8a;
+            --note-bg: #fff7ed;
+            --note-border: #fed7aa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.12) 0px, transparent 50%);
+        }
+
+        /* 華國美學 body 覆蓋 */
+        body.roc-mode {
+            background-image: none;
+            background-color: #008080; /* 經典華國綠藍色背景 */
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--panel-border);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+            position: relative;
+        }
+
+        .container.roc-mode {
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border: 4px outset #ffffff;
+            border-radius: 0px;
+            box-shadow: 6px 6px 0px #000000;
+            padding: 15px;
+            background: #c0c0c0;
+        }
+
+        /* 華國跑馬燈 */
+        .roc-ticker {
+            display: none;
+            background: #ff0000;
+            color: #ffff00;
+            font-weight: bold;
+            padding: 5px;
+            margin-bottom: 15px;
+            border: 2px inset #ffffff;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .roc-mode .roc-ticker {
+            display: block;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 20px;
+        }
+
+        header.roc-mode {
+            border-bottom: 3px double #808080;
+            padding-bottom: 10px;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .logo-area h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .roc-mode .logo-area h1 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #0000ff;
+            background: none;
+            -webkit-background-clip: initial;
+            -webkit-text-fill-color: initial;
+            text-shadow: 2px 2px 0px #ffff00;
+            font-family: "DFKai-SB", sans-serif;
+            letter-spacing: 2px;
+            text-align: center;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .logo-area p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .roc-mode .logo-area p {
+            color: #ff0000;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Style Toggle Button */
+        .style-toggle {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+        .style-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .roc-mode .style-toggle {
+            background: #008080;
+            color: #ffffff;
+            border: 2px outset #ffffff;
+            border-radius: 0px;
+            font-weight: bold;
+            box-shadow: 2px 2px 0px #000000;
+            font-family: "DFKai-SB", sans-serif;
+        }
+        .roc-mode .style-toggle:active {
+            border-style: inset;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .tabs.roc-mode {
+            border: 2px inset #ffffff;
+            border-radius: 0px;
+            background: #808080;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        .roc-mode .tab-btn {
+            border-radius: 0px;
+            background: #c0c0c0;
+            color: #000000;
+            border: 2px outset #ffffff;
+            font-weight: bold;
+        }
+        .roc-mode .tab-btn.active {
+            background: #000080;
+            color: #ffffff;
+            border: 2px inset #ffffff;
+            box-shadow: none;
+        }
+
+        /* View Sections */
+        .view-section {
+            display: none;
+        }
+        .view-section.active {
+            display: block;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Grid Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 20px;
+            align-items: start;
+        }
+        @media (max-width: 900px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Date Strip Topbar */
+        .top-info-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+        }
+        .top-info-bar.roc-mode {
+            background: #ffffff;
+            border: 2px inset #ffffff;
+            border-radius: 0;
+            color: #000;
+            font-weight: bold;
+        }
+        .ts-badge {
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 6px 12px;
+            background: var(--pill-bg);
+            color: var(--pill-color);
+            border-radius: 10px;
+        }
+        .roc-mode .ts-badge {
+            background: #eef2ff;
+            color: #1e3a8a;
+            border: 1px solid #c7d2fe;
+            border-radius: 0;
+        }
+
+        /* Card layout */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 22px;
+        }
+
+        .card.roc-mode {
+            border: 2px inset #ffffff;
+            border-radius: 0px;
+            background: #c0c0c0;
+            box-shadow: none;
+            color: #000000;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+        }
+
+        .roc-mode .card-title {
+            color: #800000;
+            font-family: "DFKai-SB", sans-serif;
+            border-bottom: 2px solid #808080;
+            padding-bottom: 5px;
+            font-size: 1.2rem;
+        }
+
+        .muted {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .roc-mode .muted {
+            color: #000000;
+            font-weight: bold;
+        }
+
+        .note {
+            background: var(--note-bg);
+            border: 1px solid var(--note-border);
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+        .roc-mode .note {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 0;
+            color: #1f2937;
+            font-weight: bold;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .roc-mode label {
+            color: #000000;
+            font-weight: bold;
+        }
+
+        textarea, input[type="text"], input[type="number"] {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 12px;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+
+        textarea:focus, input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+        }
+
+        .roc-mode textarea, .roc-mode input[type="text"], .roc-mode input[type="number"] {
+            background: #ffffff;
+            border: 2px inset #808080;
+            border-radius: 0px;
+            color: #000000;
+            font-weight: bold;
+        }
+
+        /* Controls Block */
+        .controls-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .field {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* Interactive Areas Config Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        th, td {
+            border-bottom: 1px solid var(--table-border);
+            padding: 10px 12px;
+            vertical-align: middle;
+        }
+        th {
+            text-align: left;
+            background: var(--table-header-bg);
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .roc-mode th {
+            color: #000;
+            background: #c0c0c0;
+            border: 2px solid #808080;
+            font-weight: bold;
+        }
+        .roc-mode td {
+            border: 1px solid #808080;
+        }
+        .area-name-input, .area-cap-input {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        /* Excel & Roster Dropzone */
+        .excel-dropzone {
+            border: 2px dashed var(--dropzone-border);
+            border-radius: 14px;
+            padding: 24px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .excel-dropzone:hover, .excel-dropzone.dragover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.08);
+            transform: scale(1.01);
+        }
+
+        .excel-dropzone p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .excel-dropzone.success {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .roc-mode .excel-dropzone {
+            background: #f0f0f0;
+            border: 3px dashed #808080;
+            border-radius: 0px;
+            box-shadow: none;
+            color: #000000;
+        }
+        .roc-mode .excel-dropzone:hover {
+            background: #ffffc0;
+            border-color: #ff0000;
+            transform: none;
+        }
+
+        /* Alert Toast */
+        .toast {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: var(--success);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.35);
+            z-index: 1000;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .roc-mode .toast {
+            border: 2px outset #ffffff;
+            background: #008000;
+            box-shadow: 3px 3px 0px #000000;
+            border-radius: 0px;
+            font-family: "DFKai-SB", sans-serif;
+        }
+
+        /* Buttons styling */
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 6px 20px var(--btn-shadow);
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.35);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .roc-mode .btn {
+            background: #000080;
+            color: #ffffff;
+            border: 2px outset #ffffff;
+            border-radius: 0px;
+            font-family: "DFKai-SB", sans-serif;
+            font-size: 1.1rem;
+            box-shadow: 2px 2px 0px #000000;
+            transform: none;
+        }
+        .roc-mode .btn:hover {
+            background: #0000ff;
+        }
+        .roc-mode .btn:active {
+            border-style: inset;
+        }
+
+        /* LINE Share buttons */
+        .btn-line {
+            background: var(--line-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 6px 20px rgba(6, 199, 85, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .btn-line:hover {
+            background: var(--line-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(6, 199, 85, 0.35);
+        }
+
+        .roc-mode .btn-line {
+            background: #008000;
+            color: #ffffff;
+            border: 2px outset #ffffff;
+            border-radius: 0px;
+            font-family: "DFKai-SB", sans-serif;
+            font-size: 1.1rem;
+            box-shadow: 2px 2px 0px #000000;
+            transform: none;
+        }
+        .roc-mode .btn-line:hover {
+            background: #00ff00;
+            color: #000000;
+        }
+        .roc-mode .btn-line:active {
+            border-style: inset;
+        }
+
+        /* Secondary actions */
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .roc-mode .btn-secondary {
+            background: #c0c0c0;
+            color: #000000;
+            border: 2px outset #ffffff;
+            border-radius: 0px;
+            box-shadow: 2px 2px 0px #000000;
+            font-family: "DFKai-SB", sans-serif;
+        }
+        .roc-mode .btn-secondary:active {
+            border-style: inset;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .roc-mode .btn-danger {
+            background: #ff0000;
+            border: 2px outset #ffffff;
+            border-radius: 0px;
+            font-family: "DFKai-SB", sans-serif;
+        }
+
+        /* Drawing Animation Panel */
+        .draw-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px;
+        }
+
+        .roc-mode .draw-container {
+            border: 3px dashed #808080;
+            border-radius: 0px;
+            background: #c0c0c0;
+            color: #ff0000;
+            font-weight: bold;
+        }
+
+        .shuffle-animation {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #3b82f6;
+            margin: 20px 0;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 0.1s infinite alternate;
+        }
+
+        .roc-mode .shuffle-animation {
+            font-family: "DFKai-SB", sans-serif;
+            color: #0000ff;
+            text-shadow: 2px 2px 0px #ffff00;
+            font-size: 2.6rem;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.98); opacity: 0.8; }
+            100% { transform: scale(1.02); opacity: 1; }
+        }
+
+        /* Standby Box */
+        .standby-box {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .roc-mode .standby-box {
+            background: #ffffff;
+            border: 2px inset #808080;
+            border-radius: 0;
+            color: #000;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        li {
+            padding: 4px 0;
+            font-size: 0.95rem;
+        }
+        .roc-mode li {
+            border-bottom: 1px dashed #c0c0c0;
+        }
+
+        .helper-text {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .roc-mode .helper-text {
+            color: #000000;
+            font-weight: bold;
+            background: #ffffc0;
+            padding: 5px;
+            border: 1px solid #808080;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .status-badge.connected {
+            background: rgba(16, 185, 129, 0.12);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-badge.disconnected {
+            background: rgba(239, 68, 68, 0.12);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .roc-mode .status-badge {
+            border-radius: 0px;
+            border: 1px solid #000000;
+        }
+        .roc-mode .status-badge.connected {
+            background: #80ff80;
+            color: #004000;
+        }
+        .roc-mode .status-badge.disconnected {
+            background: #ff8080;
+            color: #400000;
+        }
+
+        /* Share Text Preview Area */
+        .text-preview {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            color: #34d399;
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .roc-mode .text-preview {
+            background: #ffffff;
+            border: 2px inset #808080;
+            color: #000000;
+            border-radius: 0px;
+            font-family: "Courier New", monospace;
+            font-weight: bold;
+        }
+
+        .roc-flash {
+            animation: rocFlashAnim 0.5s infinite alternate;
+        }
+        @keyframes rocFlashAnim {
+            0% { color: #ff0000; }
+            100% { color: #ffff00; }
+        }
+
+        .actions-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            padding: 20px 0;
+            margin-top: 20px;
+            border-top: 1px solid var(--panel-border);
+        }
+        .roc-mode footer {
+            color: #000;
+            font-weight: bold;
+            border-top: 2px solid #808080;
+            background: #c0c0c0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="mainContainer">
+        <!-- 華國跑馬燈公告欄 -->
+        <div class="roc-ticker">
+            <marquee scrollamount="6">📢 溫馨提示：請各位值日生及掃地同學認真做好清潔工作，為班級爭取整潔秩序榮譽紅旗！愛護公物，人人有責！ 📢</marquee>
+        </div>
+
+        <header id="headerSection">
+            <div class="logo-area">
+                <h1 id="titleText">✨ 隨機掃地工作 2.0 (獨立安全版)</h1>
+                <p id="subTitleText">完全複製 CK-Clean 所有功能 ─ 內建 Excel 一鍵匯入與 Vercel 隱私 LINE API 安全推送</p>
+            </div>
+            <button class="style-toggle" onclick="toggleStyle()" id="styleToggleBtn">
+                🇹🇼 切換華國美學版
+            </button>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs" id="tabsContainer">
+            <button class="tab-btn active" onclick="switchTab('lottery')" id="tabLotteryBtn">🔮 抽選分配主頁</button>
+            <button class="tab-btn" onclick="switchTab('line-config')" id="tabLineBtn">🔌 Vercel 後端狀態 & 推送測試</button>
+        </div>
+
+        <!-- Tab 1: Lottery Page (Full Single-page replicate of CK portal) -->
+        <div id="lottery-tab" class="view-section active">
+            
+            <!-- Info dates block -->
+            <div class="top-info-bar" id="topInfoBar">
+                <div class="brand">班級掃區自動分配 <span class="ts-badge" style="font-size:0.75rem; margin-left:8px;">CSV / TXT / Excel ➔ LINE推送</span></div>
+                <div class="ts-badge" id="tsRange">適用日期：載入中...</div>
+                <div class="ts-badge" id="tsTop">產出時間：—</div>
+            </div>
+
+            <!-- Hint block -->
+            <div class="card" id="hintCard">
+                <div class="muted">
+                    上傳名單（<b>每列一位同學</b>）。<b>第一列為欄位名稱，第一欄：座號、第二欄：姓名，不參與抽籤</b>。<br>
+                    若中文顯示亂碼，程式會自動嘗試 Big5 編碼。本系統支援 <b>.xlsx, .xls</b> 班級 Excel 檔案直接拖曳，免轉檔！
+                </div>
+                <div class="note">
+                    💡 <b>Excel 格式小提示</b>：系統會自動抓取 Excel 的第一欄作為姓名名冊，自動過濾像「姓名/座號」等表頭。
+                </div>
+                <div class="muted" style="margin-top:8px;"><span id="globalErr" style="color:var(--danger); font-weight:bold;"></span></div>
+            </div>
+
+            <div class="grid-2">
+                <!-- Left panel: Files, Officers, Drawing logic, config tables -->
+                <div>
+                    <!-- Upload card -->
+                    <div class="card" id="uploadCard">
+                        <div class="card-title">📂 載入班級名單</div>
+                        
+                        <div class="excel-dropzone" id="excelDropzone" onclick="triggerExcelUpload()">
+                            <span style="font-size: 2.2rem;">📊</span>
+                            <h4 style="font-weight: 700; font-size: 0.95rem;">匯入 CSV、TXT 或 Excel 班級名單</h4>
+                            <p>將檔案拖曳至此，或點擊此區域選取</p>
+                            <p style="font-size: 0.75rem; opacity: 0.8; color: var(--primary);">支援 UTF-8、Big5 CSV 與 Excel 工作表</p>
+                            <input type="file" id="fileInput" accept=".csv,.txt,.xlsx,.xls" style="display: none;" onchange="handleFileUpload(event)">
+                        </div>
+                        <div class="muted" id="status" style="font-weight:bold; color:var(--success);">尚未載入名冊。請上傳名單以啟用抽籤。</div>
+                    </div>
+
+                    <!-- Date & Officer controls -->
+                    <div class="card" id="controlsCard">
+                        <div class="card-title">📅 適用日期與幹部座號設定</div>
+                        
+                        <div class="controls-strip" style="border-bottom:1px solid var(--panel-border); padding-bottom:15px; margin-bottom:15px;">
+                            <strong>掃地工作適用日期：</strong>
+                            <label style="display:inline-flex; align-items:center; gap:4px; margin-bottom:0; cursor:pointer;"><input type="radio" name="weekMode" value="this" checked> 本週</label>
+                            <label style="display:inline-flex; align-items:center; gap:4px; margin-bottom:0; cursor:pointer;"><input type="radio" name="weekMode" value="next"> 下週</label>
+                            <label style="display:inline-flex; align-items:center; gap:4px; margin-bottom:0; cursor:pointer;"><input type="radio" name="weekMode" value="custom"> 自訂</label>
+                            <span id="customWrap" style="display:none; align-items:center;">
+                                ｜ 自訂：<input type="text" id="customText" placeholder="例：運動會週、第 5 週…" style="width:200px; padding:6px 10px;">
+                            </span>
+                            <span id="weekDatesLabel" class="ts-badge" style="margin-left:auto;">—</span>
+                        </div>
+
+                        <div class="controls-strip">
+                            <div class="field">
+                                <label for="seatH" style="margin-bottom:0;">衛生股長座號</label>
+                                <input id="seatH" type="number" inputmode="numeric" min="1" placeholder="無" style="width:75px; padding:6px 10px;">
+                            </div>
+                            <div class="field">
+                                <label for="seatE" style="margin-bottom:0;">環保股長座號</label>
+                                <input id="seatE" type="number" inputmode="numeric" min="1" placeholder="無" style="width:75px; padding:6px 10px;">
+                            </div>
+                            <div class="field">
+                                <label for="seatO" style="margin-bottom:0;">衛生幹事座號</label>
+                                <input id="seatO" type="number" inputmode="numeric" min="1" placeholder="無" style="width:75px; padding:6px 10px;">
+                            </div>
+                            <div class="muted" style="margin-left:10px; font-size:0.75rem; color:var(--text-secondary);">
+                                * 設定座號後，此三位同學將分配為對應職務，並<b>不參與</b>底下隨機掃區抽籤。
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Config Sweep Areas -->
+                    <div class="card" id="configCard">
+                        <div class="card-title">🧹 掃區項目設定（抽籤前可調整）</div>
+                        <table id="areasConfig">
+                            <thead>
+                                <tr>
+                                    <th>掃地工作描述</th>
+                                    <th style="width:100px;">名額</th>
+                                    <th style="width:80px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dynamic injection of config rows -->
+                            </tbody>
+                        </table>
+                        <div class="actions-bar" style="margin-top:10px;">
+                            <button id="addAreaBtn" class="btn-secondary" onclick="addAreaRow()">➕ 新增項目</button>
+                            <button id="resetAreaBtn" class="btn-secondary" onclick="resetAreaRows()">🔄 恢復預設</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right panel: Active draw, results display, cadres table, standby list -->
+                <div>
+                    <!-- Active drawing card -->
+                    <div class="card" id="drawCard">
+                        <div class="card-title">🔮 抽選控制台</div>
+                        
+                        <div class="draw-container" id="drawArea">
+                            <p id="drawPrompt" style="font-size: 1.05rem;">請先上傳班級名冊檔案以開始抽籤</p>
+                            <button class="btn" id="drawBtn" disabled onclick="performDraw()" style="margin-top:15px; font-size:1.1rem; width:100%;">⚡ 抽籤分配</button>
+                        </div>
+
+                        <div class="actions-bar">
+                            <button id="reshuffleBtn" class="btn-secondary" disabled onclick="performDraw()" style="flex:1;">🔄 重新抽籤</button>
+                            <button id="csvBtn" class="btn-secondary" disabled onclick="downloadCsv()" style="flex:1;">💾 下載 CSV</button>
+                        </div>
+                        
+                        <div class="actions-bar" id="postDrawActions" style="display:none; flex-direction:column; gap:10px;">
+                            <button class="btn-line" onclick="shareToLine()" style="width:100%;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 5px;">
+                                    <path d="M24 10.3c0-4.8-5.4-8.8-12-8.8S0 5.5 0 10.3c0 4.3 4.3 7.9 10.1 8.7.4.1.9.3 1 .7.1.3.1.8 0 1.2-.1.4-.4 1.7-.5 2.3-.1.4-.4 1.7.2 2.3.4.4.9.2 1.3 0 0 0 5.9-3.5 8.2-6 1.7-1.9 2.7-4.1 2.7-6.2zm-16.1 2.5h-1.5c-.3 0-.5-.2-.5-.5v-4c0-.3.2-.5.5-.5h1.5c.3 0 .5.2.5.5v.5c0 .3-.2.5-.5.5h-1v1h1c.3 0 .5.2.5.5v.5c0 .3-.2.5-.5.5h-1v1h1c.3 0 .5.2.5.5v.5c0 .3-.2.5-.5.5zm3.7 0c0 .3-.2.5-.5.5h-1.5c-.3 0-.5-.2-.5-.5v-4c0-.3.2-.5.5-.5h.5c.3 0 .5.2.5.5v3.5h.5c.3 0 .5.2.5.5v.5zm3.7 0c0 .3-.2.5-.5.5h-.5c-.3 0-.5-.2-.5-.5v-3.5l-1.3 3.2c-.1.2-.3.3-.5.3s-.4-.1-.5-.3l-1.3-3.2v3.5c0 .3-.2.5-.5.5h-.5c-.3 0-.5-.2-.5-.5v-4c0-.3.2-.5.5-.5h.7c.3 0 .5.2.6.4l1 2.4 1-2.4c.1-.2.3-.4.6-.4h.7c.3 0 .5.2.5.5v4.1zm4.8 0c0 .3-.2.5-.5.5h-1.5c-.3 0-.5-.2-.5-.5v-4c0-.3.2-.5.5-.5h1.5c.3 0 .5.2.5.5v.5c0 .3-.2.5-.5.5h-1v1h1c.3 0 .5.2.5.5v.5c0 .3-.2.5-.5.5h-1v1h1c.3 0 .5.2.5.5v.5z"/>
+                                </svg>
+                                一鍵分享到 LINE (免設定)
+                            </button>
+                            <button class="btn" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2); width:100%; display:none;" onclick="sendToLineVercel()" id="vercelPushBtn">
+                                🚀 安全推送至 LINE 群組
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Output Results Grid -->
+                    <div id="resultsWrapper" style="display: none;">
+                        <!-- Officers output table -->
+                        <div class="card" id="rolesCard">
+                            <div class="card-title">👥 幹部名冊</div>
+                            <table id="rolesTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width:50%;">職務</th>
+                                        <th>姓名</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Cadres injected dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Sweep assignment output table -->
+                        <div class="card" id="areasCard">
+                            <div class="card-title">📋 掃區分配名單</div>
+                            <table id="areasTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width:40%;">掃區項目</th>
+                                        <th>指派成員</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Sweep members list injected dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Standby and notes grid -->
+                        <div class="grid-2" style="grid-template-columns: 1fr 1fr; gap:15px; margin-bottom: 22px;">
+                            <div class="card" id="standbyCard" style="margin-bottom:0;">
+                                <div class="card-title">🛏️ 候補名單（本週未分配）</div>
+                                <div id="standbyBox" class="standby-box">—</div>
+                            </div>
+                            
+                            <div class="card" id="notesCard" style="margin-bottom:0;">
+                                <div class="card-title">📝 備註事項</div>
+                                <ul>
+                                    <li>請任何假需找代理人。</li>
+                                    <li><b>原則上</b>每週由衛生股長抽新名單，<b>公告於班群</b>。</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- LINE Text Message Preview card -->
+                        <div class="card" id="previewCard">
+                            <div class="card-title">📱 LINE 訊息推送文字預覽</div>
+                            <div class="text-preview" id="textMessagePreview"></div>
+                            <button class="btn-secondary" onclick="copyResultText()">📋 複製預覽純文字</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: LINE Vercel Environment variables -->
+        <div id="line-config-tab" class="view-section">
+            <div class="card">
+                <div class="card-title">🛡️ Vercel 後端安全推送狀態與測試</div>
+                <p style="font-size: 0.95rem; margin-bottom: 20px; line-height: 1.6; color: var(--text-secondary);">
+                    此為<b>安全獨立部署版</b>。所有的 LINE API 憑證 (Access Token) 與預設群組 ID 都以<strong>環境變數</strong>的安全格式存放在 Vercel 雲端伺服器中。網頁前端將不再洩漏任何私密金鑰，且完全避開了瀏覽器的跨網域 (CORS) 限制！
+                </p>
+
+                <!-- Status Badge loaded from /api/push securely -->
+                <div style="margin-bottom: 25px;">
+                    <label>☁️ Vercel 後端環境變數狀態：</label>
+                    <div id="lineConnectionStatus" class="status-badge disconnected">
+                        🔍 正在向 Vercel 伺服器探測狀態...
+                    </div>
+                </div>
+
+                <div class="card" style="background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05);">
+                    <div class="card-title" style="font-size: 0.95rem;">💡 如何在 Vercel 儀表板中設定金鑰？</div>
+                    <div style="font-size: 0.9rem; line-height: 1.6; color:var(--text-secondary);">
+                        請前往您的 <a href="https://vercel.com" target="_blank" style="color: var(--primary); font-weight: bold; text-decoration: underline;">Vercel Dashboard</a>，進入該專案的 **Settings ➔ Environment Variables** 頁面，並添加以下兩項環境變數：
+                        <ul style="margin-left: 20px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
+                            <li>🔑 <strong><code>LINE_CHANNEL_ACCESS_TOKEN</code></strong>：填入您在 LINE Developers 申請到的 Bot 頻道存取權權限憑證。</li>
+                            <li>💬 <strong><code>LINE_GROUP_ID</code></strong>：填入您希望推送訊息的 LINE 目標群組 ID。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Local Group ID override (optional) -->
+                <div style="margin-top: 20px; margin-bottom: 20px;">
+                    <label for="localGroupIdInput">💬 覆蓋特定 LINE 群組 ID (選填)</label>
+                    <input type="text" id="localGroupIdInput" placeholder="C1234567890abcdef..." onchange="saveLocalGroupId()">
+                    <div class="helper-text">
+                        若您在網頁端有填寫此欄位，系統將優先推送至此群組 ID。若留空則自動發送到 Vercel 後端環境變數配置的 <code>LINE_GROUP_ID</code>。
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; flex-wrap:wrap; margin-top:20px;">
+                    <button class="btn-secondary" onclick="checkVercelEnvStatus()">🔄 重新整理伺服器狀態</button>
+                    <button class="btn" style="background: #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);" onclick="testVercelPush()">⚡ 發送測試信號到 LINE</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer id="footerSection">
+            © 班級清潔分工工具 2.0 · 產出時間 <span id="tsFooter">—</span>
+        </footer>
+    </div>
+
+    <!-- Toast Component -->
+    <div id="toast" class="toast">
+        <span id="toastIcon">✅</span>
+        <span id="toastMessage">成功匯入名單！</span>
+    </div>
+
+    <script>
+        /* ===== 輔助工具與常數 ===== */
+        const pad2 = n => String(n).padStart(2, '0');
+        const labelSN = (obj) => obj ? `${pad2(obj.seat)} ${obj.name}` : "";
+        const WEEK_NAMES = ['週一', '週二', '週三', '週四', '週五', '週六'];
+        const fmt = d => `${d.getFullYear()}/${pad2(d.getMonth()+1)}/${pad2(d.getDate())}`;
+        const mondayOf = (d) => {
+            const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            const diff = (x.getDay() + 6) % 7;
+            x.setDate(x.getDate() - diff);
+            return x;
+        };
+        const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+        const $ = s => document.querySelector(s);
+        const shuffle = arr => arr.map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+        const escapeHtml = (s) => String(s).replace(/[&<>"']/g, m => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        }[m]));
+
+        /* ===== 適用日期邏輯 ===== */
+        let weekDays = [], dateLabel = '—', weekMode = 'this';
+        function computeWeek(mode) {
+            weekMode = mode;
+            if (mode === 'this' || mode === 'next') {
+                const mon = mode === 'this' ? mondayOf(new Date()) : addDays(mondayOf(new Date()), 7);
+                weekDays = Array.from({ length: 6 }, (_, i) => addDays(mon, i));
+                dateLabel = weekDays.map((d, i) => `${WEEK_NAMES[i]} ${fmt(d)}`).join('、');
+            } else {
+                weekDays = [];
+                dateLabel = document.getElementById('customText').value.trim() || '—';
+            }
+            document.getElementById('weekDatesLabel').textContent = dateLabel;
+            document.getElementById('tsRange').textContent = '適用日期：' + dateLabel;
+            
+            // Re-generate message if results exist
+            if (latestResults.length > 0) {
+                generateLineMessage();
+            }
+        }
+
+        /* ===== 預設及自訂掃區資料庫 ===== */
+        const DEFAULT_AREAS = [
+            { name: "黑板／講桌／電腦", capacity: 2 }, { name: "掃拖講台", capacity: 1 },
+            { name: "掃拖第1、2排", capacity: 1 }, { name: "掃拖第3、4排", capacity: 1 },
+            { name: "掃拖第5、6排", capacity: 1 }, { name: "掃拖走廊、傘架", capacity: 1 },
+            { name: "擦整後方櫃、窗戶", capacity: 1 }, { name: "回收：紙類、保特瓶", capacity: 1 },
+            { name: "回收：紙餐盒、鐵鋁", capacity: 1 }, { name: "回收：鋁箔包、塑膠", capacity: 1 },
+            { name: "倒垃圾", capacity: 1 }, { name: "外掃區", capacity: 5 },
+        ];
+        let areaDefs = JSON.parse(JSON.stringify(DEFAULT_AREAS));
+
+        function renderAreaConfig() {
+            const tb = document.querySelector('#areasConfig tbody');
+            tb.innerHTML = "";
+            areaDefs.forEach((a, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="text" class="area-name-input" data-idx="${i}" value="${escapeHtml(a.name)}" oninput="updateAreaName(${i}, this.value)" /></td>
+                    <td><input type="number" class="area-cap-input" data-idx="${i}" min="0" value="${a.capacity}" oninput="updateAreaCap(${i}, this.value)" style="width:75px;" /></td>
+                    <td>
+                        <button type="button" class="btn-danger" onclick="deleteAreaRow(${i})">刪除</button>
+                    </td>`;
+                tb.appendChild(tr);
+            });
+            // Update inputs style if in ROC mode
+            if (isRocMode) {
+                document.querySelectorAll('#areasConfig tbody input').forEach(el => el.classList.add('roc-mode'));
+                document.querySelectorAll('#areasConfig tbody button').forEach(el => el.classList.add('roc-mode'));
+            }
+        }
+
+        function updateAreaName(idx, val) {
+            areaDefs[idx].name = val.trim();
+        }
+
+        function updateAreaCap(idx, val) {
+            const num = parseInt(val, 10);
+            areaDefs[idx].capacity = Number.isFinite(num) && num >= 0 ? num : 0;
+        }
+
+        function addAreaRow() {
+            areaDefs.push({ name: "新掃區項目", capacity: 1 });
+            renderAreaConfig();
+            showToast('➕ 已新增一個空掃地項目！');
+        }
+
+        function deleteAreaRow(idx) {
+            areaDefs.splice(idx, 1);
+            renderAreaConfig();
+            showToast('🗑️ 已刪除該項目！');
+        }
+
+        function resetAreaRows() {
+            if (confirm('確定要將掃區配置恢復成初始預設值嗎？')) {
+                areaDefs = JSON.parse(JSON.stringify(DEFAULT_AREAS));
+                renderAreaConfig();
+                showToast('🔄 掃區項目已重置！');
+            }
+        }
+
+        function getAreaDefsFromUI() {
+            return areaDefs.filter(x => x.name.length > 0 && x.capacity > 0);
+        }
+
+        /* ===== 全能檔案與編碼解析邏輯 (CSV / TXT / Excel) ===== */
+        let students = [];
+        let roles = null, latestResults = [], standby = [];
+        let currentTab = 'lottery';
+        let isRocMode = false;
+
+        function splitCsvLine(line) {
+            const out = []; let cur = ""; let inQ = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (ch === '"') {
+                    if (inQ && line[i + 1] === '"') { cur += '"'; i++; } else inQ = !inQ;
+                } else if (ch === ',' && !inQ) {
+                    out.push(cur); cur = "";
+                } else {
+                    cur += ch;
+                }
+            }
+            out.push(cur);
+            return out.map(s => s.trim());
+        }
+
+        const isNumericStr = s => /^[0-9]+$/.test(String(s).trim());
+
+        function parseStudentsFromText(text) {
+            if (text.charCodeAt(0) === 0xFEFF) {
+                text = text.slice(1);
+            }
+            const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+            const data = lines.length > 1 ? lines.slice(1) : lines;
+            const list = []; const seen = new Set(); const dupSeats = new Set();
+            
+            data.forEach((line, idx) => {
+                let seat, name;
+                if (line.includes(",")) {
+                    const cols = splitCsvLine(line);
+                    const a = (cols[0] ?? "").replace(/^0+/, "").trim();
+                    const b = (cols[1] ?? "").replace(/^0+/, "").trim();
+                    if (isNumericStr(a) && !isNumericStr(b)) { seat = parseInt(a, 10); name = b; }
+                    else if (isNumericStr(b) && !isNumericStr(a)) { seat = parseInt(b, 10); name = a; }
+                    else if (cols.length >= 2) {
+                        if (isNumericStr(a)) { seat = parseInt(a, 10); name = cols.slice(1).join(" ").trim(); }
+                        else { name = a; seat = isNumericStr(b) ? parseInt(b, 10) : (idx + 1); }
+                    }
+                    else { name = cols[0] || ""; seat = idx + 1; }
+                } else if (line.includes("\t")) {
+                    const [c1 = "", c2 = ""] = line.split("\t");
+                    const a = c1.replace(/^0+/, "").trim(), b = c2.replace(/^0+/, "").trim();
+                    if (isNumericStr(a) && !isNumericStr(b)) { seat = parseInt(a, 10); name = b; }
+                    else if (isNumericStr(b) && !isNumericStr(a)) { seat = parseInt(b, 10); name = a; }
+                    else { name = a || b; seat = isNumericStr(b) ? parseInt(b, 10) : (idx + 1); }
+                } else {
+                    const m = line.match(/^\s*0*([0-9]{1,3})\s*[,，\s]+\s*(.+)$/);
+                    if (m) { seat = parseInt(m[1], 10); name = m[2].trim(); }
+                    else { seat = idx + 1; name = line; }
+                }
+                if (!name) return;
+                if (!Number.isFinite(seat) || seat <= 0) seat = idx + 1;
+                if (seen.has(seat)) dupSeats.add(seat);
+                seen.add(seat);
+                list.push({ seat, name });
+            });
+            return { list, dupSeats: Array.from(dupSeats) };
+        }
+
+        async function handleFileUpload(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            $("#status").textContent = "正在載入檔案並辨識格式...";
+            $("#status").style.color = "var(--primary)";
+
+            const fileExt = file.name.split('.').pop().toLowerCase();
+
+            // Case 1: Excel Roster File (.xlsx, .xls)
+            if (fileExt === 'xlsx' || fileExt === 'xls') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        
+                        // Convert Excel sheet rows into standard CSV text structure
+                        const csvText = XLSX.utils.sheet_to_csv(worksheet, { forceQuotes: true });
+                        const parsed = parseStudentsFromText(csvText);
+                        
+                        if (parsed.list.length === 0) {
+                            $("#status").textContent = "❌ 解析 Excel 失敗：工作表內容為空。";
+                            $("#status").style.color = "var(--danger)";
+                            return;
+                        }
+                        
+                        finalizeStudentsLoad(parsed);
+                    } catch (error) {
+                        console.error(error);
+                        $("#status").textContent = "❌ 解析 Excel 檔案錯誤，請確保格式正常。";
+                        $("#status").style.color = "var(--danger)";
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } 
+            // Case 2: Text / CSV file with auto Big5 decoding
+            else {
+                const tryReadFile = (encoding) => {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = e => resolve(e.target.result);
+                        reader.onerror = e => reject(e);
+                        reader.readAsText(file, encoding);
+                    });
+                };
+
+                try {
+                    const textUtf8 = await tryReadFile('UTF-8');
+                    let useBig5 = false;
+                    const badCharRatio = (textUtf8.match(/\uFFFD/g) || []).length / Math.max(1, textUtf8.length);
+                    const hasNonAscii = /[^\x00-\x7F]/.test(textUtf8);
+                    const hasChinese = /[\u4E00-\u9FFF]/.test(textUtf8);
+
+                    if (badCharRatio > 0.02 || (hasNonAscii && !hasChinese)) {
+                        useBig5 = true;
+                    }
+
+                    let finalContent = "";
+                    if (useBig5) {
+                        $("#status").textContent = "⚠️ 偵測到 UTF-8 亂碼，改以 Big5 編碼重讀中...";
+                        try {
+                            finalContent = await tryReadFile('Big5');
+                        } catch (big5Err) {
+                            console.error(big5Err);
+                            finalContent = textUtf8;
+                        }
+                    } else {
+                        finalContent = textUtf8;
+                    }
+
+                    const parsed = parseStudentsFromText(finalContent);
+                    finalizeStudentsLoad(parsed);
+                } catch (err) {
+                    console.error(err);
+                    $("#status").textContent = "❌ 檔案讀取失敗。";
+                    $("#status").style.color = "var(--danger)";
+                }
+            }
+        }
+
+        function finalizeStudentsLoad(parsed) {
+            students = parsed.list;
+            if (students.length === 0) {
+                $("#status").textContent = "❌ 名單內沒有包含有效的學生姓名。";
+                $("#status").style.color = "var(--danger)";
+                return;
+            }
+
+            // Save to local storage for persistence
+            localStorage.setItem('clean_roster_students', JSON.stringify(students));
+
+            $("#status").textContent = parsed.dupSeats?.length
+                ? `✅ 已載入 ${students.length} 人名冊！(重複座號: ${parsed.dupSeats.join('、')})`
+                : `✅ 已載入 ${students.length} 人名冊！隨時可開始抽籤。`;
+            $("#status").style.color = "var(--success)";
+
+            $("#drawBtn").disabled = false;
+            $("#reshuffleBtn").disabled = true;
+            $("#csvBtn").disabled = true;
+            
+            showToast(`👥 成功匯入 ${students.length} 位學生名單！`);
+            updateHelpers();
+        }
+
+        function loadStoredConfig() {
+            const stored = localStorage.getItem('clean_roster_students');
+            if (stored) {
+                students = JSON.parse(stored);
+                $("#status").textContent = `✅ 已載入快取的 ${students.length} 人名單，可直接抽籤。`;
+                $("#status").style.color = "var(--success)";
+                $("#drawBtn").disabled = false;
+            } else {
+                // Load default roster so users can test immediately
+                students = Array.from({length: 15}, (_, i) => ({
+                    seat: i + 1,
+                    name: ["張小明", "李小華", "王大同", "陳美美", "林小龍", "劉阿土", "趙子龍", "關小羽", "張小飛", "黃小忠", "馬小超", "魏小延", "姜小維", "諸葛亮", "司馬懿"][i]
+                }));
+                localStorage.setItem('clean_roster_students', JSON.stringify(students));
+                $("#status").textContent = `💡 已預填 ${students.length} 位預設名單提供直接測試。`;
+                $("#drawBtn").disabled = false;
+            }
+            updateHelpers();
+        }
+
+        function updateHelpers() {
+            const drawPrompt = document.getElementById('drawPrompt');
+            if (!latestResults.length) {
+                drawPrompt.innerHTML = isRocMode 
+                    ? `【衛生第一】目前名單共 <strong>${students.length}</strong> 人，請點選按鈕隨機指派愛國勞動役。`
+                    : `準備就緒！目前名單共 <strong>${students.length}</strong> 人，點擊下方按鈕開始公平分派。`;
+            }
+        }
+
+        /* ===== 抽籤核心邏輯 (幹部過濾、名額配置) ===== */
+        function performDraw() {
+            if (students.length === 0) {
+                showToast('❌ 請先上傳或選擇名單！', 'error');
+                return;
+            }
+
+            const defs = getAreaDefsFromUI();
+            if (defs.length === 0) {
+                showToast('❌ 請至少新增一個掃區項目且名額大於 0！', 'error');
+                return;
+            }
+
+            // Animation Phase
+            const drawArea = document.getElementById('drawArea');
+            drawArea.innerHTML = `
+                <div class="shuffle-animation" id="shuffler">🔄 系統隨機配置中...</div>
+                <p class="muted">正在進行公平工作分派，請稍後...</p>
+            `;
+
+            if (isRocMode) {
+                document.getElementById('shuffler').innerHTML = "🇹🇼 分配愛國自治青年勞動役中... 🇹🇼";
+            }
+
+            const mockNames = ["張小明", "諸葛亮", "趙子龍", "關小羽", "陳美美"];
+            let animCount = 0;
+            const interval = setInterval(() => {
+                const name = mockNames[Math.floor(Math.random() * mockNames.length)];
+                const area = defs[Math.floor(Math.random() * defs.length)].name;
+                const shuffler = document.getElementById('shuffler');
+                if (shuffler) {
+                    shuffler.innerHTML = isRocMode
+                        ? `🇹🇼 ${name} ⚔️ ${area} 🇹🇼`
+                        : `🔄 ${name} ➔ ${area}`;
+                }
+                animCount++;
+                if (animCount > 12) {
+                    clearInterval(interval);
+                    executeAllocation(defs);
+                }
+            }, 80);
+        }
+
+        function executeAllocation(defs) {
+            try {
+                document.getElementById('globalErr').textContent = '';
+                
+                const prefs = {
+                    hSeat: $("#seatH").value.trim(),
+                    eSeat: $("#seatE").value.trim(),
+                    oSeat: $("#seatO").value.trim()
+                };
+
+                const seatMap = new Map(students.map(s => [s.seat, s.name]));
+                const used = new Set();
+                roles = { hygieneLead: null, envLead: null, hygieneOfficer: null };
+
+                function pick(seatVal, key, label) {
+                    if (seatVal == null || seatVal === "") return;
+                    const s = Number(seatVal);
+                    if (!Number.isInteger(s) || s <= 0) throw new Error(`【${label}】座號無效：${seatVal}`);
+                    if (!seatMap.has(s)) throw new Error(`【${label}】座號 ${s} 不在名單中`);
+                    if (used.has(s)) throw new Error(`座號 ${s} 被重複指定於多個幹部`);
+                    used.add(s);
+                    roles[key] = { seat: s, name: seatMap.get(s) };
+                }
+
+                pick(prefs.hSeat, "hygieneLead", "衛生股長");
+                pick(prefs.eSeat, "envLead", "環保股長");
+                pick(prefs.oSeat, "hygieneOfficer", "衛生幹事");
+
+                // Filter out allocated officers from active random sweep drawing pool
+                const pool = students.filter(x => !used.has(x.seat)).map(x => ({ seat: x.seat, name: x.name }));
+                const areaObjs = defs.map(a => ({ name: a.name, cap: a.capacity, members: [] }));
+                
+                // Shuffle pool randomly
+                const shuffled = shuffle(pool);
+                let ptr = 0;
+                areaObjs.forEach(a => {
+                    a.members = shuffled.slice(ptr, ptr + a.cap);
+                    ptr += a.cap;
+                });
+
+                latestResults = areaObjs;
+                standby = shuffled.slice(ptr);
+
+                // Render UI results
+                renderResults();
+                generateLineMessage();
+
+                // Trigger confetti fireworks
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.6 },
+                    colors: isRocMode ? ['#ff0000', '#0000ff', '#ffffff', '#ffff00'] : ['#3b82f6', '#8b5cf6', '#10b981']
+                });
+
+                showToast('🎉 分派完成！結果已呈現在下方表格。');
+
+                // Enable buttons
+                $("#reshuffleBtn").disabled = false;
+                $("#csvBtn").disabled = false;
+            } catch (err) {
+                document.getElementById('globalErr').textContent = err.message;
+                showToast('❌ 抽籤失敗：' + err.message, 'error');
+                
+                // Restore Draw Prompt UI
+                updateHelpers();
+            }
+        }
+
+        function renderResults() {
+            const drawArea = document.getElementById('drawArea');
+            const resultsWrapper = document.getElementById('resultsWrapper');
+
+            // Draw Area Success message
+            drawArea.innerHTML = isRocMode ? `
+                <div class="roc-flash" style="font-size: 3.2rem; font-weight:900; margin-bottom: 10px; font-family:'DFKai-SB'; text-shadow:2px 2px 0px #000000;">大 功 告 成</div>
+                <h2 style="font-weight: 900; font-size: 1.6rem; margin-bottom: 8px; font-family:'DFKai-SB'; color: #000080;">班級勞動役指派完畢！</h2>
+                <p style="color: #ff0000; font-weight: bold; margin-bottom: 20px;">請各位愛國青年遵照指示辦理，為班級爭取榮譽！</p>
+                <button class="btn-secondary" onclick="performDraw()">🔄 重新指派工作</button>
+            ` : `
+                <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
+                <h2 style="font-weight: 800; font-size: 1.4rem; margin-bottom: 6px;">工作分配完成！</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">名冊與 LINE 訊息已同步生成，請查看下方報表。</p>
+                <button class="btn-secondary" onclick="performDraw()">🔄 重新抽籤</button>
+            `;
+
+            // 1. Render Officers (rolesTable)
+            const rt = $("#rolesTable tbody");
+            rt.innerHTML = "";
+            [
+                ["衛生股長", roles.hygieneLead],
+                ["環保股長", roles.envLead],
+                ["衛生幹事", roles.hygieneOfficer]
+            ].forEach(([title, obj]) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `<td><b>${title}</b></td><td>${obj ? escapeHtml(labelSN(obj)) : "（未指定）"}</td>`;
+                rt.appendChild(tr);
+            });
+
+            // 2. Render Sweep assignment (areasTable)
+            const at = $("#areasTable tbody");
+            at.innerHTML = "";
+            latestResults.forEach(a => {
+                const html = (a.members.length ? a.members : ["（目前缺員）"])
+                    .map(m => typeof m === 'string' ? `<li>${m}</li>` : `<li>${escapeHtml(labelSN(m))}</li>`).join("");
+                const tr = document.createElement("tr");
+                tr.innerHTML = `<td><b>${a.name}</b> <span class="ts-badge" style="font-size:0.7rem; padding:2px 6px;">名額:${a.cap}</span></td><td><ul>${html}</ul></td>`;
+                at.appendChild(tr);
+            });
+
+            // 3. Render Standby Box
+            const standbyBox = $("#standbyBox");
+            standbyBox.innerHTML = standby.length
+                ? `<ul>${standby.map(m => `<li>${escapeHtml(labelSN(m))}</li>`).join("")}</ul>`
+                : `<div class="muted">本日無候補人員，全員上工！</div>`;
+
+            // Show Results
+            resultsWrapper.style.display = "block";
+            document.getElementById('postDrawActions').style.display = "flex";
+            
+            const ts = new Date().toLocaleString();
+            $("#tsTop").textContent = "產出時間：" + ts;
+            $("#tsFooter").textContent = ts;
+
+            // Apply theme class
+            if (isRocMode) {
+                resultsWrapper.classList.add('roc-mode');
+                document.querySelectorAll('#resultsWrapper .card').forEach(c => c.classList.add('roc-mode'));
+                document.querySelectorAll('#resultsWrapper table').forEach(t => t.classList.add('roc-mode'));
+            } else {
+                resultsWrapper.classList.remove('roc-mode');
+                document.querySelectorAll('#resultsWrapper .card').forEach(c => c.classList.remove('roc-mode'));
+                document.querySelectorAll('#resultsWrapper table').forEach(t => t.classList.remove('roc-mode'));
+            }
+        }
+
+        /* ===== CSV 匯出邏輯 ===== */
+        function toCSV(rows) {
+            return rows.map(r => r.map(v => {
+                const s = String(v ?? "");
+                return /["\x2c\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+            }).join(",")).join("\n");
+        }
+
+        function buildCsvText() {
+            const defs = getAreaDefsFromUI();
+            const parts = [];
+
+            if (weekMode === 'custom') {
+                parts.push(toCSV([["適用日期", dateLabel || "—"]]));
+            } else {
+                const dateRows = [["適用日期"], ...weekDays.map((d, i) => [WEEK_NAMES[i], fmt(d)])];
+                parts.push(toCSV(dateRows));
+            }
+
+            parts.push(toCSV([
+                ["職務", "姓名"],
+                ["衛生股長", roles?.hygieneLead ? labelSN(roles.hygieneLead) : ""],
+                ["環保股長", roles?.envLead ? labelSN(roles.envLead) : ""],
+                ["衛生幹事", roles?.hygieneOfficer ? labelSN(roles.hygieneOfficer) : ""]
+            ]));
+
+            const areaRows = [["掃區項目", "分配名額", "分配成員"]];
+            latestResults.forEach(a => {
+                const membersStr = a.members.map(m => labelSN(m)).join("、");
+                areaRows.push([a.name, a.cap, membersStr]);
+            });
+            parts.push(toCSV(areaRows));
+
+            parts.push(toCSV([["候補人員（本日未分配）"], ...standby.map(m => [labelSN(m)])]));
+            parts.push(toCSV([["備註事項"], ["請任何假需找代理人。"], ["原則上每週由衛生股長抽新名單，公告於班群。"]]));
+            parts.push(toCSV([["產出時間", new Date().toLocaleString()]]));
+
+            return "\uFEFF" + parts.join("\n\n");
+        }
+
+        function downloadCsv() {
+            if (!latestResults.length) return;
+            const csv = buildCsvText();
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+
+            try {
+                const url = URL.createObjectURL(blob);
+                const newTab = window.open(url, '_blank');
+                if (!newTab || newTab.closed || typeof newTab.closed == 'undefined') {
+                    throw new Error("Popup blocked");
+                }
+            } catch (e) {
+                $('#globalErr').textContent = '⚠️ 下載失敗，彈出視窗可能被瀏覽器阻擋。請允許本站彈出視窗後再試。';
+                let textarea = document.getElementById('csv-fallback');
+                if (!textarea) {
+                    textarea = document.createElement('textarea');
+                    textarea.id = 'csv-fallback';
+                    Object.assign(textarea.style, { width: '100%', height: '150px', marginTop: '15px' });
+                    textarea.readOnly = true;
+                    
+                    const container = $('#previewCard');
+                    const title = document.createElement('h4');
+                    title.textContent = '手動複製 CSV 區（因下載遭阻擋）：';
+                    title.style.marginTop = '15px';
+                    title.style.marginBottom = '5px';
+                    container.appendChild(title);
+                    container.appendChild(textarea);
+                }
+                textarea.value = csv.startsWith("\uFEFF") ? csv.substring(1) : csv;
+            }
+        }
+
+        /* ===== LINE 推送訊息格式化與通訊 ===== */
+        let lineMessageText = "";
+
+        function generateLineMessage() {
+            if (!latestResults.length) return;
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}/${(today.getMonth()+1).toString().padStart(2, '0')}/${today.getDate().toString().padStart(2, '0')}`;
+            
+            let msg = "";
+            if (isRocMode) {
+                msg = `🇹🇼 【班級自治整潔勞動派遣令】 🇹🇼\n`;
+                msg += `📅 派遣日期：${dateStr}\n`;
+                msg += `📆 適用日期：${dateLabel}\n`;
+                msg += `============================\n`;
+                msg += `👥 幹部幹事名冊：\n`;
+                msg += ` ∙ 衛生股長：${roles.hygieneLead ? labelSN(roles.hygieneLead) : "（無）"}\n`;
+                msg += ` ∙ 環保股長：${roles.envLead ? labelSN(roles.envLead) : "（無）"}\n`;
+                msg += ` ∙ 衛生幹事：${roles.hygieneOfficer ? labelSN(roles.hygieneOfficer) : "（無）"}\n`;
+                msg += `============================\n`;
+                msg += `📋 勞動服務工作配置：\n`;
+                latestResults.forEach((a, i) => {
+                    const mList = a.members.map(m => labelSN(m)).join('、');
+                    msg += ` ${i + 1}. ${a.name} (名額:${a.cap}) ➔ 【 ${mList || '缺員'} 】\n`;
+                });
+                msg += `============================\n`;
+                msg += `💤 候補愛國自治青年：\n`;
+                msg += ` ${standby.map(m => labelSN(m)).join('、') || '（無）'}\n`;
+                msg += `============================\n`;
+                msg += `📢 責任榮譽！請全體受派遣同學準時報到清潔負責區域，為班級爭取最高整潔秩序榮譽！ 🧹✨`;
+            } else {
+                msg = `🧹 今日隨機掃地工作分配名單 🧹\n`;
+                msg += `📅 抽選日期：${dateStr}\n`;
+                msg += `📆 適用日期：${dateLabel}\n`;
+                msg += `====================\n`;
+                msg += `👥 幹部職務：\n`;
+                msg += ` ∙ 衛生股長：${roles.hygieneLead ? labelSN(roles.hygieneLead) : "（無）"}\n`;
+                msg += ` ∙ 環保股長：${roles.envLead ? labelSN(roles.envLead) : "（無）"}\n`;
+                msg += ` ∙ 衛生幹事：${roles.hygieneOfficer ? labelSN(roles.hygieneOfficer) : "（無）"}\n`;
+                msg += `====================\n`;
+                msg += `📋 掃區分配結果：\n`;
+                latestResults.forEach((a, i) => {
+                    const mList = a.members.map(m => labelSN(m)).join('、');
+                    msg += ` ${i + 1}. ${a.name} ： ${mList || '缺員'}\n`;
+                });
+                msg += `====================\n`;
+                msg += `💤 候補名單（今日休息）：\n`;
+                msg += ` ${standby.map(m => labelSN(m)).join('、') || '（無）'}\n`;
+                msg += `====================\n`;
+                msg += `大家辛苦了！放學後請將負責區域清理乾淨，謝謝合作！💪✨`;
+            }
+
+            lineMessageText = msg;
+            document.getElementById('textMessagePreview').innerText = msg;
+        }
+
+        function shareToLine() {
+            if (!lineMessageText) return;
+            const encodedText = encodeURIComponent(lineMessageText);
+            const lineShareUrl = `https://line.me/R/share?text=${encodedText}`;
+            window.open(lineShareUrl, '_blank');
+        }
+
+        function copyResultText() {
+            if (!lineMessageText) return;
+            navigator.clipboard.writeText(lineMessageText)
+                .then(() => showToast('📋 已複製結果純文字！'))
+                .catch(() => showToast('複製失敗，請手動選取文字複製。', 'error'));
+        }
+
+        /* ===== Vercel Serverless 後端狀態探測與安全推送 ===== */
+        let envConfigured = false;
+
+        function checkVercelEnvStatus() {
+            const badge = document.getElementById('lineConnectionStatus');
+            const pushBtn = document.getElementById('vercelPushBtn');
+
+            fetch('/api/push')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.allConfigured) {
+                        badge.className = 'status-badge connected';
+                        badge.innerText = '✅ Vercel 後端金鑰配置完成 (自動推送功能已啟用)';
+                        pushBtn.style.display = 'inline-flex';
+                        envConfigured = true;
+                    } else {
+                        let missing = [];
+                        if (!data.tokenConfigured) missing.push('LINE_CHANNEL_ACCESS_TOKEN');
+                        if (!data.groupConfigured) missing.push('LINE_GROUP_ID');
+                        
+                        badge.className = 'status-badge disconnected';
+                        badge.innerText = `⚠️ Vercel 金鑰尚未配置完全，遺失變數：[${missing.join(', ')}]`;
+                        pushBtn.style.display = 'none';
+                        envConfigured = false;
+                    }
+                })
+                .catch(err => {
+                    console.warn('Unable to query local /api/push. It is normal if running in a simple static server (e.g. without Vercel CLI).', err);
+                    badge.className = 'status-badge disconnected';
+                    badge.innerText = '❌ 無法連線至 Vercel API (若為本機靜態伺服器請先使用一鍵分享，部署至 Vercel 後即自動啟用！)';
+                    pushBtn.style.display = 'none';
+                    envConfigured = false;
+                });
+        }
+
+        function sendToLineVercel() {
+            if (!lineMessageText) return;
+
+            const pushBtn = document.getElementById('vercelPushBtn');
+            const localGroupId = localStorage.getItem('clean_local_group_id');
+            
+            pushBtn.disabled = true;
+            pushBtn.innerHTML = '⏳ 正在傳送至 LINE...';
+
+            fetch('/api/push', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: lineMessageText,
+                    groupId: localGroupId || ""
+                })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (res.ok) {
+                    showToast('🚀 成功在背景自動推送至 LINE 班級群組！');
+                } else {
+                    showToast(`❌ 推送失敗: ${data.error || '未知錯誤'}`, 'error');
+                }
+                pushBtn.disabled = false;
+                pushBtn.innerHTML = '🚀 安全推送至 LINE 群組';
+            })
+            .catch(err => {
+                showToast('❌ 無法與 Vercel 後端 API 通訊，請確認網路或環境變數。', 'error');
+                pushBtn.disabled = false;
+                pushBtn.innerHTML = '🚀 安全推送至 LINE 群組';
+            });
+        }
+
+        function testVercelPush() {
+            const localGroupId = localStorage.getItem('clean_local_group_id');
+            const testMsg = `🧪 隨機掃地工作系統 (Vercel Standalone) 串接測試成功！\n測試時間：${new Date().toLocaleString()}`;
+            
+            showToast('⏳ 正在傳送測試信號...', 'success');
+
+            fetch('/api/push', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: testMsg,
+                    groupId: localGroupId || ""
+                })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (res.ok) {
+                    alert('🎉 測試成功！您的 LINE 群組應已成功收到測試推送訊息。');
+                } else {
+                    alert(`❌ 測試發送失敗：${data.error}\n\n詳細資訊：${JSON.stringify(data.details)}`);
+                }
+            })
+            .catch(err => {
+                alert('❌ 伺服器通訊出錯，請確認 Vercel 部署正常運作中！\n錯誤：' + err.message);
+            });
+        }
+
+        function saveLocalGroupId() {
+            const localGroupId = document.getElementById('localGroupIdInput').value.trim();
+            localStorage.setItem('clean_local_group_id', localGroupId);
+            showToast('💾 覆蓋群組 ID 儲存成功！');
+        }
+
+        /* ===== UI 與切換風格邏輯 (雙美學) ===== */
+        function toggleStyle() {
+            const elements = [
+                document.body,
+                document.getElementById('mainContainer'),
+                document.getElementById('headerSection'),
+                document.getElementById('tabsContainer'),
+                document.getElementById('tabLotteryBtn'),
+                document.getElementById('tabLineBtn'),
+                document.getElementById('topInfoBar'),
+                document.getElementById('hintCard'),
+                document.getElementById('uploadCard'),
+                document.getElementById('controlsCard'),
+                document.getElementById('configCard'),
+                document.getElementById('drawCard'),
+                document.getElementById('styleToggleBtn'),
+                document.getElementById('excelDropzone'),
+                document.getElementById('toast'),
+                document.getElementById('footerSection')
+            ];
+
+            const cards = document.querySelectorAll('.card');
+            const textPreviews = document.querySelectorAll('.text-preview');
+            const textareas = document.querySelectorAll('textarea');
+            const inputs = document.querySelectorAll('input');
+            const badges = document.querySelectorAll('.ts-badge');
+            const statusBadges = document.querySelectorAll('.status-badge');
+            const tables = document.querySelectorAll('table');
+
+            isRocMode = !isRocMode;
+            localStorage.setItem('rocMode', isRocMode);
+
+            const allElements = [
+                ...elements, ...cards, ...textPreviews, ...textareas, 
+                ...inputs, ...badges, ...statusBadges, ...tables
+            ];
+            
+            allElements.forEach(el => {
+                if (el) {
+                    if (isRocMode) el.classList.add('roc-mode');
+                    else el.classList.remove('roc-mode');
+                }
+            });
+
+            // Adjust specific text strings to match sincere retro styling
+            const styleToggleBtn = document.getElementById('styleToggleBtn');
+            const titleText = document.getElementById('titleText');
+            const subTitleText = document.getElementById('subTitleText');
+            const drawPrompt = document.getElementById('drawPrompt');
+            const drawBtn = document.getElementById('drawBtn');
+
+            if (isRocMode) {
+                styleToggleBtn.innerHTML = "✨ 切換極簡現代版";
+                titleText.innerHTML = "🇹🇼 青年建功立業 隨機掃除分派作業系統 🇹🇼";
+                titleText.classList.add('roc-flash');
+                subTitleText.innerHTML = "增進班級整潔，鍛鍊強健體魄！支援 LINE 通訊社群一鍵回報！";
+                
+                // Re-render config table input fields in Retro styles
+                renderAreaConfig();
+                
+                if (!latestResults.length) {
+                    drawPrompt.innerHTML = `【愛國愛家衛生第一】目前名單共 <strong>${students.length}</strong> 人，請點選按鈕隨機指派愛國勞動役。`;
+                    drawBtn.innerHTML = "⚡ 開始指派勞動任務";
+                }
+            } else {
+                styleToggleBtn.innerHTML = "🇹🇼 切換華國美學版";
+                titleText.innerHTML = "✨ 隨機掃地工作 2.0 (獨立安全版)";
+                titleText.classList.remove('roc-flash');
+                subTitleText.innerHTML = "完全複製 CK-Clean 所有功能 ─ 內建 Excel 一鍵匯入與 Vercel 隱私 LINE API 安全推送";
+                
+                renderAreaConfig();
+                
+                if (!latestResults.length) {
+                    drawPrompt.innerHTML = `準備就緒！目前名單共 <strong>${students.length}</strong> 人，點擊下方按鈕開始公平分派。`;
+                    drawBtn.innerHTML = "⚡ 抽籤分配";
+                }
+            }
+
+            // If drawing result is already generated, re-render to reflect new styles
+            if (latestResults.length > 0) {
+                renderResults();
+                generateLineMessage();
+            }
+            updateHelpers();
+        }
+
+        // Tab switcher
+        function switchTab(tabName) {
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+            if (tabName === 'lottery') {
+                document.getElementById('lottery-tab').classList.add('active');
+                document.getElementById('tabLotteryBtn').classList.add('active');
+            } else if (tabName === 'line-config') {
+                document.getElementById('line-config-tab').classList.add('active');
+                document.getElementById('tabLineBtn').classList.add('active');
+            }
+            currentTab = tabName;
+        }
+
+        // Toast alert helper
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.innerText = message;
+            if (type === 'success') {
+                toast.style.background = 'var(--success)';
+                toastIcon.innerText = '✅';
+            } else {
+                toast.style.background = 'var(--danger)';
+                toastIcon.innerText = '🚨';
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Excel file trigger upload
+        function triggerExcelUpload() {
+            document.getElementById('fileInput').click();
+        }
+
+        // Drag and drop setup for Excel / CSV
+        function setupDragAndDrop() {
+            const dropzone = document.getElementById('excelDropzone');
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.remove('dragover');
+                }, false);
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length > 0) {
+                    const mockEvent = { target: { files: files } };
+                    handleFileUpload(mockEvent);
+                }
+            }, false);
+        }
+
+        /* ===== 系統初始化啟動 ===== */
+        window.onload = function() {
+            loadStoredConfig();
+            computeWeek('this');
+            renderAreaConfig();
+            setupDragAndDrop();
+            checkVercelEnvStatus();
+
+            // Override local Group ID input
+            document.getElementById('localGroupIdInput').value = localStorage.getItem('clean_local_group_id') || '';
+
+            // Handle date text change custom
+            document.getElementById('customText').addEventListener('input', () => computeWeek('custom'));
+            document.querySelectorAll('input[name="weekMode"]').forEach(r => {
+                r.addEventListener('change', (e) => {
+                    const mode = e.target.value;
+                    document.getElementById('customWrap').style.display = mode === 'custom' ? 'inline-flex' : 'none';
+                    computeWeek(mode);
+                });
+            });
+
+            // Auto-trigger ROC mode style toggle if previously saved
+            if (localStorage.getItem('rocMode') === 'true') {
+                toggleStyle();
+            }
+        };
+    </script>
+</body>
+</html>

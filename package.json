@@ -1,0 +1,11 @@
+{
+  "name": "clean-v2-standalone",
+  "version": "1.0.0",
+  "description": "隨機掃地工作抽選系統 (Vercel Standalone & LINE Group Push Integration)",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python3 -m http.server 8000"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
