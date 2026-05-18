@@ -1009,6 +1009,10 @@
                         </div>
                         
                         <div class="actions-bar" id="postDrawActions" style="display:none; flex-direction:column; gap:10px;">
+                            <div id="lotteryPasswordContainer" style="display:none; margin-bottom: 5px; text-align: left;">
+                                <label for="lotteryPasswordInput" style="font-size:0.8rem; margin-bottom:4px; display:block;">🔐 衛生股長授權密碼：</label>
+                                <input type="password" id="lotteryPasswordInput" placeholder="請輸入授權密碼..." style="width:100%; padding:10px; font-size:0.9rem;" onchange="syncLotteryPassword()">
+                            </div>
                             <button class="btn-line" onclick="shareToLine()" style="width:100%;">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 5px;">
                                     <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
@@ -1101,10 +1105,11 @@
                 <div class="card" style="background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05);">
                     <div class="card-title" style="font-size: 0.95rem;">💡 如何在 Vercel 儀表板中設定金鑰？</div>
                     <div style="font-size: 0.9rem; line-height: 1.6; color:var(--text-secondary);">
-                        請前往您的 <a href="https://vercel.com" target="_blank" style="color: var(--primary); font-weight: bold; text-decoration: underline;">Vercel Dashboard</a>，進入該專案的 **Settings ➔ Environment Variables** 頁面，並添加以下兩項環境變數：
+                        請前往您的 <a href="https://vercel.com" target="_blank" style="color: var(--primary); font-weight: bold; text-decoration: underline;">Vercel Dashboard</a>，進入該專案的 **Settings ➔ Environment Variables** 頁面，並添加以下三項環境變數：
                         <ul style="margin-left: 20px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
                             <li>🔑 <strong><code>LINE_CHANNEL_ACCESS_TOKEN</code></strong>：填入您在 LINE Developers 申請到的 Bot 頻道存取權權限憑證。</li>
                             <li>💬 <strong><code>LINE_GROUP_ID</code></strong>：填入您希望推送訊息的 LINE 目標群組 ID。</li>
+                            <li>🔐 <strong><code>PUSH_PASSWORD</code></strong>：(選填) 設定此環境變數可開啟「推送防護機制」，要求輸入正確的授權密碼方能送出。</li>
                         </ul>
                     </div>
                 </div>
@@ -1115,6 +1120,15 @@
                     <input type="text" id="localGroupIdInput" placeholder="C1234567890abcdef..." onchange="saveLocalGroupId()">
                     <div class="helper-text">
                         若您在網頁端有填寫此欄位，系統將優先推送至此群組 ID。若留空則自動發送到 Vercel 後端環境變數配置的 <code>LINE_GROUP_ID</code>。
+                    </div>
+                </div>
+
+                <!-- Password Input (optional/mandatory depending on server backend status) -->
+                <div id="pushPasswordConfigContainer" style="margin-top: 20px; margin-bottom: 20px; display: none;">
+                    <label for="localPasswordInput">🔐 推送授權密碼 (Vercel 後端已啟用密碼防護)</label>
+                    <input type="password" id="localPasswordInput" placeholder="請輸入衛生股長專屬密碼..." onchange="saveLocalPassword()">
+                    <div class="helper-text">
+                        伺服器已啟用安全密碼防護，發送推送訊息前必須在此輸入正確密碼。密碼將安全儲存於您本地的瀏覽器。
                     </div>
                 </div>
 
@@ -1768,6 +1782,13 @@
         function checkVercelEnvStatus() {
             const badge = document.getElementById('lineConnectionStatus');
             const pushBtn = document.getElementById('vercelPushBtn');
+            const configPwdContainer = document.getElementById('pushPasswordConfigContainer');
+            const lotteryPwdContainer = document.getElementById('lotteryPasswordContainer');
+
+            // Load saved password from localStorage
+            const savedPwd = localStorage.getItem('clean_push_password') || '';
+            document.getElementById('localPasswordInput').value = savedPwd;
+            document.getElementById('lotteryPasswordInput').value = savedPwd;
 
             fetch('/api/push')
                 .then(res => res.json())
@@ -1787,6 +1808,15 @@
                         pushBtn.style.display = 'none';
                         envConfigured = false;
                     }
+
+                    // Dynamically toggle password fields based on backend configuration
+                    if (data && data.passwordRequired) {
+                        configPwdContainer.style.display = 'block';
+                        lotteryPwdContainer.style.display = 'block';
+                    } else {
+                        configPwdContainer.style.display = 'none';
+                        lotteryPwdContainer.style.display = 'none';
+                    }
                 })
                 .catch(err => {
                     console.warn('Unable to query local /api/push. It is normal if running in a simple static server (e.g. without Vercel CLI).', err);
@@ -1794,7 +1824,24 @@
                     badge.innerText = '❌ 無法連線至 Vercel API (若為本機靜態伺服器請先使用一鍵分享，部署至 Vercel 後即自動啟用！)';
                     pushBtn.style.display = 'none';
                     envConfigured = false;
+                    configPwdContainer.style.display = 'none';
+                    lotteryPwdContainer.style.display = 'none';
                 });
+        }
+
+        function saveLocalPassword() {
+            const pwd = document.getElementById('localPasswordInput').value;
+            localStorage.setItem('clean_push_password', pwd);
+            const lotteryPwd = document.getElementById('lotteryPasswordInput');
+            if (lotteryPwd) lotteryPwd.value = pwd;
+            showToast('🔐 密碼已儲存！');
+        }
+
+        function syncLotteryPassword() {
+            const pwd = document.getElementById('lotteryPasswordInput').value;
+            localStorage.setItem('clean_push_password', pwd);
+            const localPwd = document.getElementById('localPasswordInput');
+            if (localPwd) localPwd.value = pwd;
         }
 
         function generateLineFlexMessage() {
@@ -1988,6 +2035,7 @@
 
             const pushBtn = document.getElementById('vercelPushBtn');
             const localGroupId = localStorage.getItem('clean_local_group_id');
+            const savedPassword = localStorage.getItem('clean_push_password') || '';
             
             pushBtn.disabled = true;
             pushBtn.innerHTML = '⏳ 正在傳送至 LINE...';
@@ -2002,7 +2050,8 @@
                 body: JSON.stringify({
                     messages: [ flexPayload ],
                     message: lineMessageText,
-                    groupId: localGroupId || ""
+                    groupId: localGroupId || "",
+                    password: savedPassword
                 })
             })
             .then(async res => {
@@ -2024,6 +2073,7 @@
 
         function testVercelPush() {
             const localGroupId = localStorage.getItem('clean_local_group_id');
+            const savedPassword = localStorage.getItem('clean_push_password') || '';
             const testMsg = `🧪 隨機掃地工作系統 (Vercel Standalone) 串接測試成功！\n測試時間：${new Date().toLocaleString()}`;
             
             showToast('⏳ 正在傳送測試信號...', 'success');
@@ -2035,7 +2085,8 @@
                 },
                 body: JSON.stringify({
                     message: testMsg,
-                    groupId: localGroupId || ""
+                    groupId: localGroupId || "",
+                    password: savedPassword
                 })
             })
             .then(async res => {

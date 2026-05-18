@@ -12,9 +12,11 @@ module.exports = async (req, res) => {
   if (req.method === 'GET') {
     const tokenConfigured = !!process.env.LINE_CHANNEL_ACCESS_TOKEN;
     const groupConfigured = !!process.env.LINE_GROUP_ID;
+    const passwordRequired = !!process.env.PUSH_PASSWORD;
     return res.status(200).json({
       tokenConfigured,
       groupConfigured,
+      passwordRequired,
       allConfigured: tokenConfigured && groupConfigured
     });
   }
@@ -24,10 +26,18 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { message, messages, groupId } = req.body;
+    const { message, messages, groupId, password } = req.body;
     
     const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
     const targetGroupId = groupId || process.env.LINE_GROUP_ID;
+    const pushPassword = process.env.PUSH_PASSWORD;
+
+    // Secure password verification
+    if (pushPassword && password !== pushPassword) {
+      return res.status(403).json({
+        error: '授權密碼錯誤，您無權發送推送訊息！'
+      });
+    }
 
     if (!token) {
       return res.status(500).json({ 
