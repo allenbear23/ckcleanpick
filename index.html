@@ -1065,74 +1065,95 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Intense rotating golden light rays */
+        /* Intense rotating fluid golden light rays with flowing linear energy gradient */
         .wish-ray {
             position: absolute;
             top: 50%;
             left: 50%;
             width: 4px;
             height: 200vh;
-            background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,222,89,0.7) 50%, rgba(255,255,255,0) 100%);
+            /* High-fidelity multi-stop plasma energy gradient */
+            background: linear-gradient(180deg, 
+                rgba(255,255,255,0) 0%, 
+                rgba(255,222,89,0.15) 15%, 
+                rgba(255,255,255,0.95) 45%, 
+                rgba(255,190,40,1) 50%, 
+                rgba(255,255,255,0.95) 55%, 
+                rgba(255,222,89,0.15) 85%, 
+                rgba(255,255,255,0) 100%
+            );
+            background-size: 100% 200%;
+            background-position: 0% 0%;
             transform: translate(-50%, -50%) rotate(var(--rot));
             transform-origin: center center;
-            filter: blur(2px) drop-shadow(0 0 15px #ffde59);
+            filter: blur(2.5px) drop-shadow(0 0 20px rgba(255, 222, 89, 0.8));
             opacity: 0;
             pointer-events: none;
             z-index: 100002;
+            mix-blend-mode: color-dodge; /* Blends naturally with nebula background */
         }
         .wish-ray.play {
-            animation: wishRayScaleRotate 1.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+            animation: wishRayScaleRotate 1.6s cubic-bezier(0.15, 0.85, 0.3, 1) forwards;
         }
         @keyframes wishRayScaleRotate {
             0% {
                 transform: translate(-50%, -50%) rotate(var(--rot)) scaleY(0);
+                background-position: 0% 0%;
                 width: 3px;
                 opacity: 0;
             }
             15% {
-                opacity: 0.95;
+                opacity: 1;
             }
             50% {
                 transform: translate(-50%, -50%) rotate(calc(var(--rot) + 40deg)) scaleY(1.4);
-                width: 25px;
-                opacity: 0.8;
+                background-position: 0% -100%; /* Shifting light stream upwards */
+                width: 32px;
+                opacity: 0.95;
             }
             100% {
-                transform: translate(-50%, -50%) rotate(calc(var(--rot) + 80deg)) scaleY(2);
+                transform: translate(-50%, -50%) rotate(calc(var(--rot) + 80deg)) scaleY(2.2);
+                background-position: 0% -200%;
                 width: 0px;
                 opacity: 0;
             }
         }
 
-        /* Multi-layered Rotating Lens Flares */
+        /* Multi-layered Elastic Lens Flares */
         .wish-lens-flare {
             position: absolute;
             top: 50%;
             left: 50%;
             width: 100vw;
-            height: 12px;
-            background: radial-gradient(circle, #ffffff 0%, rgba(255,222,89,0.9) 20%, rgba(255,159,67,0) 70%);
+            height: 14px;
+            background: radial-gradient(ellipse at center, 
+                #ffffff 0%, 
+                rgba(255,236,150,0.95) 15%, 
+                rgba(255,159,67,0.4) 40%, 
+                rgba(255,255,255,0) 75%
+            );
             transform: translate(-50%, -50%) rotate(var(--rot)) scaleX(0);
             transform-origin: center center;
-            filter: blur(1.5px) drop-shadow(0 0 25px #ffde59);
+            filter: blur(1.5px) drop-shadow(0 0 30px rgba(255, 222, 89, 0.9));
             opacity: 0;
             z-index: 100002;
             pointer-events: none;
+            mix-blend-mode: color-dodge;
         }
         .wish-lens-flare.play {
-            animation: wishFlareStretch 1.2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+            animation: wishFlareStretch 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         @keyframes wishFlareStretch {
             0% {
                 transform: translate(-50%, -50%) rotate(var(--rot)) scaleX(0);
-                height: 16px;
+                height: 18px;
                 opacity: 0;
             }
             20% {
                 opacity: 1;
             }
             100% {
-                transform: translate(-50%, -50%) rotate(calc(var(--rot) + 20deg)) scaleX(2.2);
+                transform: translate(-50%, -50%) rotate(calc(var(--rot) + 20deg)) scaleX(2.4);
                 height: 0px;
                 opacity: 0;
             }
