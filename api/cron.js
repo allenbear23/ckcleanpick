@@ -1,11 +1,25 @@
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+const EDGE_CONFIG_URL = process.env.EDGE_CONFIG;
 const hasKV = !!(KV_URL && KV_TOKEN);
 
 // Ephemeral memory fallbacks
 let memoryConfig = null;
 let memoryHistory = null;
 let memoryRound = 0;
+
+async function getEdgeConfigValue(key) {
+  if (!EDGE_CONFIG_URL) return null;
+  try {
+    const res = await fetch(EDGE_CONFIG_URL);
+    if (!res.ok) return null;
+    const items = await res.json();
+    return items[key] || null;
+  } catch (e) {
+    console.error('Edge Config Read Error:', e);
+    return null;
+  }
+}
 
 async function getKV(key) {
   if (!hasKV) return null;
@@ -84,13 +98,18 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  // Allow GET or POST to trigger the Cron job (Vercel Cron is a GET request)
   try {
-    // 1. Fetch Cloud Config
+    // 1. Fetch Cloud Config (Prioritize KV, then Edge Config, then Memory)
     let config = null;
     if (hasKV) {
       config = await getKV('clean_pick_config');
-    } else {
+    }
+    
+    if (!config && EDGE_CONFIG_URL) {
+      config = await getEdgeConfigValue('clean_pick_config');
+    }
+
+    if (!config) {
       config = memoryConfig; // Ephemeral fallback
     }
 
@@ -265,6 +284,7 @@ module.exports = async (req, res) => {
       round: roundCounter,
       pushedToLine: pushed,
       hasKV,
+      hasEdgeConfig: !!EDGE_CONFIG_URL,
       dateRange: weekDates,
       pushDetails,
       cadres,

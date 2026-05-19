@@ -1,9 +1,24 @@
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+const EDGE_CONFIG_URL = process.env.EDGE_CONFIG;
 const hasKV = !!(KV_URL && KV_TOKEN);
 
 // Ephemeral memory cache fallback
 let memoryConfig = null;
+
+async function getEdgeConfigValue(key) {
+  if (!EDGE_CONFIG_URL) return null;
+  try {
+    // Edge Config URL fetch returns all items in the store
+    const res = await fetch(EDGE_CONFIG_URL);
+    if (!res.ok) return null;
+    const items = await res.json();
+    return items[key] || null;
+  } catch (e) {
+    console.error('Edge Config Read Error:', e);
+    return null;
+  }
+}
 
 async function getKV(key) {
   if (!hasKV) return null;
@@ -53,15 +68,28 @@ module.exports = async (req, res) => {
   if (req.method === 'GET') {
     try {
       let config = null;
+      let source = 'memory';
+
+      // Prioritize KV, then Edge Config, then Memory
       if (hasKV) {
         config = await getKV('clean_pick_config');
-      } else {
+        source = 'vercel-kv';
+      }
+      
+      if (!config && EDGE_CONFIG_URL) {
+        config = await getEdgeConfigValue('clean_pick_config');
+        source = 'edge-config';
+      }
+
+      if (!config) {
         config = memoryConfig;
       }
 
       return res.status(200).json({
         hasKV,
+        hasEdgeConfig: !!EDGE_CONFIG_URL,
         hasCloudConfig: !!config,
+        source,
         config: config ? {
           studentCount: config.students?.length || 0,
           defsCount: config.defs?.length || 0,
@@ -110,9 +138,12 @@ module.exports = async (req, res) => {
       return res.status(200).json({
         success,
         hasKV,
+        hasEdgeConfig: !!EDGE_CONFIG_URL,
         message: hasKV 
           ? '排程設定成功同步至 Vercel KV 雲端資料庫！'
-          : '排程設定已暫存於伺服器記憶體中 (未偵測到 Vercel KV 資料庫)'
+          : (EDGE_CONFIG_URL 
+              ? '偵測到 Edge Config！唯讀模式下設定已暫存於記憶體，建議啟用 Vercel KV 以進行每週排程自動寫入。'
+              : '排程設定已暫存於伺服器記憶體中 (未偵測到 Vercel KV 資料庫)')
       });
     } catch (err) {
       return res.status(500).json({ error: 'Failed to save config', message: err.message });
