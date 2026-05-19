@@ -898,6 +898,7 @@
             background-size: 300px 300px;
             opacity: 0.5;
             animation: wishStarsFloat 60s linear infinite;
+            z-index: 1;
         }
         @keyframes wishStarsFloat {
             0% { transform: translateY(0); }
@@ -1217,7 +1218,7 @@
             opacity: 0.65;
             mix-blend-mode: screen;
             pointer-events: none;
-            z-index: 100000;
+            z-index: 2;
             animation: wishNebulaRotate 40s linear infinite;
         }
         @keyframes wishNebulaRotate {
@@ -1328,7 +1329,8 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100003;
+            position: relative;
+            z-index: 10;
             perspective: 1000px;
         }
         .wish-showcase.active {
