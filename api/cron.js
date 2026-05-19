@@ -201,6 +201,7 @@ module.exports = async (req, res) => {
     if (hasKV) {
       await setKV('clean_pick_history', history);
       await setKV('clean_pick_round_counter', roundCounter);
+      await setKV('clean_checkin_states', {});
     } else {
       memoryHistory = history;
       memoryRound = roundCounter;

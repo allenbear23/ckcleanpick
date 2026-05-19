@@ -1649,16 +1649,62 @@
             }
         }
 
-        function renderResults() {
+        let checkinStates = {};
+
+        function loadCheckinStates() {
+            fetch('/api/checkin')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.success) {
+                        checkinStates = data.checkinStates || {};
+                        if (latestResults.length > 0) renderResultsQuiet();
+                    }
+                })
+                .catch(err => {
+                    console.warn('Unable to query cloud check-in states, using local cache.', err);
+                    checkinStates = JSON.parse(localStorage.getItem('clean_checkin_states') || '{}');
+                    if (latestResults.length > 0) renderResultsQuiet();
+                });
+        }
+
+        function toggleCheckin(seat, checked) {
+            checkinStates[seat] = !!checked;
+            localStorage.setItem('clean_checkin_states', JSON.stringify(checkinStates));
+            renderResultsQuiet();
+
+            fetch('/api/checkin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ seat: parseInt(seat, 10), checked: !!checked })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    checkinStates = data.checkinStates || {};
+                    renderResultsQuiet();
+                }
+            })
+            .catch(err => {
+                console.warn('Unable to sync check-in state to cloud.', err);
+            });
+        }
+
+        function renderResultsQuiet() {
+            renderResults(true);
+        }
+
+        function renderResults(isQuiet = false) {
             const drawArea = document.getElementById('drawArea');
             const resultsWrapper = document.getElementById('resultsWrapper');
 
             // Draw Area Success message
-            drawArea.innerHTML = `
-                <h2 style="font-weight: 800; font-size: 1.4rem; margin-bottom: 6px;">工作分配完成！</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 20px;">名冊與 LINE 訊息已同步生成，請查看下方報表。</p>
-                <button class="btn-secondary" onclick="performDraw()">重新抽籤</button>
-            `;
+            if (!isQuiet) {
+                drawArea.innerHTML = `
+                    <h2 style="font-weight: 800; font-size: 1.4rem; margin-bottom: 6px;">工作分配完成！</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">名冊與 LINE 訊息已同步生成，請查看下方報表。</p>
+                    <button class="btn-secondary" onclick="performDraw()">重新抽籤</button>
+                `;
+            }
 
             // 1. Render Officers (rolesTable)
             const rt = $("#rolesTable tbody");
@@ -1677,10 +1723,62 @@
             const at = $("#areasTable tbody");
             at.innerHTML = "";
             latestResults.forEach(a => {
-                const html = (a.members.length ? a.members : ["（目前缺員）"])
-                    .map(m => typeof m === 'string' ? `<li>${m}</li>` : `<li>${escapeHtml(labelSN(m))}</li>`).join("");
                 const tr = document.createElement("tr");
-                tr.innerHTML = `<td><b>${a.name}</b> <span class="ts-badge" style="font-size:0.7rem; padding:2px 6px;">名額:${a.cap}</span></td><td><ul>${html}</ul></td>`;
+                const tdArea = document.createElement("td");
+                tdArea.innerHTML = `<b>${a.name}</b> <span class="ts-badge" style="font-size:0.7rem; padding:2px 6px;">名額:${a.cap}</span>`;
+                
+                const tdMembers = document.createElement("td");
+                const ul = document.createElement("ul");
+                ul.style.listStyle = "none";
+                ul.style.padding = "0";
+                ul.style.margin = "0";
+
+                if (a.members.length === 0) {
+                    ul.innerHTML = `<li class="muted">（目前缺員）</li>`;
+                } else {
+                    a.members.forEach(m => {
+                        const li = document.createElement("li");
+                        li.style.display = "flex";
+                        li.style.justifyContent = "space-between";
+                        li.style.alignItems = "center";
+                        li.style.padding = "6px 8px";
+                        li.style.marginBottom = "6px";
+                        li.style.background = "rgba(255,255,255,0.03)";
+                        li.style.borderRadius = "4px";
+                        li.style.border = "1px solid var(--panel-border)";
+
+                        const isChecked = !!checkinStates[m.seat];
+                        const nameSpan = document.createElement("span");
+                        nameSpan.innerHTML = `<strong>(${m.seat}) ${escapeHtml(m.name)}</strong>`;
+                        if (isChecked) {
+                            nameSpan.style.textDecoration = "line-through";
+                            nameSpan.style.color = "var(--text-secondary)";
+                        }
+
+                        const actionDiv = document.createElement("div");
+                        actionDiv.style.display = "flex";
+                        actionDiv.style.gap = "8px";
+                        actionDiv.style.alignItems = "center";
+
+                        if (isChecked) {
+                            actionDiv.innerHTML = `
+                                <span class="status-badge connected" style="font-size: 0.75rem; padding: 2px 8px; margin: 0; background: var(--success); color: white;">✅ 已完成</span>
+                                <button class="btn-secondary" style="padding: 2px 6px; font-size: 0.7rem; margin: 0;" onclick="toggleCheckin(${m.seat}, false)">重設</button>
+                            `;
+                        } else {
+                            actionDiv.innerHTML = `
+                                <button class="btn" style="padding: 2px 8px; font-size: 0.75rem; margin: 0; background: rgba(59, 130, 246, 0.2); color: var(--primary); border: 1px solid var(--primary);" onclick="toggleCheckin(${m.seat}, true)">📥 簽到</button>
+                            `;
+                        }
+
+                        li.appendChild(nameSpan);
+                        li.appendChild(actionDiv);
+                        ul.appendChild(li);
+                    });
+                }
+                tdMembers.appendChild(ul);
+                tr.appendChild(tdArea);
+                tr.appendChild(tdMembers);
                 at.appendChild(tr);
             });
 
@@ -1693,6 +1791,9 @@
             // Show Results
             resultsWrapper.style.display = "block";
             document.getElementById('postDrawActions').style.display = "flex";
+
+            // Update previews dynamically
+            generateLineMessage();
             
             const ts = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
             $("#tsTop").textContent = "產出時間：" + ts;
@@ -2257,10 +2358,9 @@
                 margin: "lg"
             });
 
-            // 2. Sweep Areas box section
+            // 2. Sweep Areas box section (Sleek Interactive rows)
             const areaRows = [];
             latestResults.forEach(a => {
-                const membersStr = a.members.map(m => typeof m === 'string' ? m : `${pad2(m.seat)} ${m.name}`).join("、");
                 areaRows.push({
                     type: "box",
                     layout: "horizontal",
@@ -2268,23 +2368,59 @@
                     contents: [
                         {
                             type: "text",
-                            text: a.name,
+                            text: `📍 ${a.name}`,
                             size: "xs",
-                            color: "#f3f4f6",
+                            color: "#a78bfa",
                             weight: "bold",
-                            flex: 4,
-                            wrap: true
-                        },
-                        {
-                            type: "text",
-                            text: membersStr || "（無人分派）",
-                            size: "xs",
-                            color: "#10b981",
-                            flex: 6,
                             wrap: true
                         }
                     ]
                 });
+
+                if (a.members.length === 0) {
+                    areaRows.push({
+                        type: "text",
+                        text: "  （目前缺員）",
+                        size: "xs",
+                        color: "#9ca3af",
+                        margin: "xs"
+                    });
+                } else {
+                    a.members.forEach(m => {
+                        const isChecked = !!checkinStates[m.seat];
+                        const checkinUrl = `https://ckc091.vercel.app/?checkin=${m.seat}&name=${encodeURIComponent(m.name)}`;
+                        
+                        areaRows.push({
+                            type: "box",
+                            layout: "horizontal",
+                            margin: "sm",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: `  (${pad2(m.seat)}) ${m.name} ${isChecked ? "✅ 已完成" : "⏳ 待打掃"}`,
+                                    size: "xs",
+                                    color: isChecked ? "#9ca3af" : "#f3f4f6",
+                                    flex: 8,
+                                    align: "left"
+                                },
+                                {
+                                    type: "text",
+                                    text: isChecked ? " " : "[📥 簽到]",
+                                    size: "xs",
+                                    color: "#3b82f6",
+                                    weight: "bold",
+                                    align: "right",
+                                    flex: 4,
+                                    action: isChecked ? null : {
+                                        type: "uri",
+                                        label: "簽到",
+                                        uri: checkinUrl
+                                    }
+                                }
+                            ]
+                        });
+                    });
+                }
             });
 
             bubbleContents.push({
@@ -2618,9 +2754,154 @@
                     computeWeek(mode);
                 });
             });
-
-
         };
+
+        // Check for check-in query parameters on page load!
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const checkinSeat = urlParams.get('checkin');
+            const checkinName = urlParams.get('name');
+            if (checkinSeat) {
+                showCheckinModal(checkinSeat, checkinName);
+            }
+            loadCheckinStates();
+        });
+
+        function showCheckinModal(seat, name) {
+            const modal = document.createElement('div');
+            modal.id = 'checkinConfModal';
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100vw';
+            modal.style.height = '100vh';
+            modal.style.background = 'rgba(15, 23, 42, 0.9)';
+            modal.style.backdropFilter = 'blur(12px)';
+            modal.style.display = 'flex';
+            modal.style.justifyContent = 'center';
+            modal.style.alignItems = 'center';
+            modal.style.zIndex = '99999';
+
+            modal.innerHTML = `
+                <div class="card" style="width: 90%; max-width: 400px; text-align: center; padding: 30px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+                    <div style="font-size: 3.5rem; margin-bottom: 20px;" id="confettiIcon">🧹</div>
+                    <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 10px;">打掃工作簽到確認</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 25px; line-height: 1.6;">
+                        座號：<strong style="color: var(--primary); font-size: 1.2rem;">${seat}</strong><br>
+                        姓名：<strong style="color: var(--primary); font-size: 1.2rem;">${name || ''}</strong><br><br>
+                        請點選下方按鈕確認您已完成今日打掃工作。
+                    </p>
+                    <button class="btn" id="confirmCheckinBtn" style="width: 100%; padding: 12px; font-weight: bold; background: var(--success); color: white; border-radius: 6px; border: none; cursor: pointer;">
+                        ✨ 確認送出簽到
+                    </button>
+                    <button class="btn-secondary" onclick="closeCheckinModal()" style="width: 100%; margin-top: 10px; padding: 10px; border-radius: 6px;">
+                        取消
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            document.getElementById('confirmCheckinBtn').addEventListener('click', () => {
+                const btn = document.getElementById('confirmCheckinBtn');
+                btn.disabled = true;
+                btn.innerHTML = '⏳ 正在傳送簽到訊號...';
+
+                // Call Vercel KV Checkin API
+                fetch('/api/checkin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ seat: parseInt(seat, 10), checked: true })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    // Update local state
+                    checkinStates[seat] = true;
+                    localStorage.setItem('clean_checkin_states', JSON.stringify(checkinStates));
+                    if (typeof renderResults === 'function') renderResults(true);
+
+                    // Play success state
+                    const card = modal.querySelector('.card');
+                    card.innerHTML = `
+                        <div style="font-size: 4rem; margin-bottom: 20px; animation: bounce 1s infinite;">🎉</div>
+                        <h3 style="font-size: 1.6rem; font-weight: 800; color: var(--success); margin-bottom: 10px;">簽到成功！</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 25px; line-height: 1.6;">
+                            感謝您的辛勞！<br>
+                            座號 <strong>${seat}</strong> ${name || ''}<br>
+                            已成功將您的「打掃完成」狀態回傳至雲端！
+                        </p>
+                        <button class="btn" onclick="closeCheckinModal()" style="width: 100%; padding: 12px; background: var(--primary); color: white; border-radius: 6px; border: none; cursor: pointer;">
+                            好的
+                        </button>
+                    `;
+                    
+                    // Trigger confetti
+                    triggerConfettiRain();
+                })
+                .catch(err => {
+                    console.warn(err);
+                    checkinStates[seat] = true;
+                    localStorage.setItem('clean_checkin_states', JSON.stringify(checkinStates));
+                    if (typeof renderResults === 'function') renderResults(true);
+                    
+                    const card = modal.querySelector('.card');
+                    card.innerHTML = `
+                        <div style="font-size: 4rem; margin-bottom: 20px;">🎉</div>
+                        <h3 style="font-size: 1.6rem; font-weight: 800; color: var(--success); margin-bottom: 10px;">本機簽到成功！</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 25px; line-height: 1.6;">
+                            已成功在瀏覽器登記！<br>
+                            座號 <strong>${seat}</strong> ${name || ''} 簽到完畢！
+                        </p>
+                        <button class="btn" onclick="closeCheckinModal()" style="width: 100%; padding: 12px; background: var(--primary); color: white; border-radius: 6px; border: none; cursor: pointer;">
+                            好的
+                        </button>
+                    `;
+                    triggerConfettiRain();
+                });
+            });
+        }
+
+        function closeCheckinModal() {
+            const modal = document.getElementById('checkinConfModal');
+            if (modal) modal.remove();
+            // Clear URL parameters
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.pushState({ path: newUrl }, '', newUrl);
+        }
+
+        function triggerConfettiRain() {
+            for (let i = 0; i < 60; i++) {
+                const conf = document.createElement('div');
+                conf.style.position = 'fixed';
+                conf.style.width = Math.random() * 10 + 5 + 'px';
+                conf.style.height = Math.random() * 10 + 5 + 'px';
+                conf.style.background = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6'][Math.floor(Math.random() * 6)];
+                conf.style.top = '-10px';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.opacity = Math.random();
+                conf.style.transform = `rotate(${Math.random() * 360}deg)`;
+                conf.style.zIndex = '999999';
+                conf.style.pointerEvents = 'none';
+                document.body.appendChild(conf);
+
+                const speed = Math.random() * 3 + 2;
+                const wind = Math.random() * 2 - 1;
+                let curTop = -10;
+                let curLeft = parseFloat(conf.style.left);
+
+                const anim = setInterval(() => {
+                    curTop += speed;
+                    curLeft += wind;
+                    conf.style.top = curTop + 'px';
+                    conf.style.left = curLeft + 'px';
+
+                    if (curTop > window.innerHeight) {
+                        clearInterval(anim);
+                        conf.remove();
+                    }
+                }, 16);
+            }
+        }
     </script>
 </body>
 </html>
