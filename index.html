@@ -934,45 +934,172 @@
         }
         .wish-meteor {
             position: absolute;
-            top: -150px;
-            left: -150px;
-            width: 300px;
-            height: 80px;
-            background: linear-gradient(90deg, rgba(255,223,89,0) 0%, rgba(255,223,89,0.9) 70%, #ffffff 100%);
+            top: -200px;
+            left: -200px;
+            width: 480px;
+            height: 120px;
             transform: rotate(35deg);
-            border-radius: 999px;
-            filter: drop-shadow(0 0 25px #ffde59) drop-shadow(0 0 50px #ff9f43);
             opacity: 0;
+            z-index: 100001;
+            pointer-events: none;
         }
         .wish-meteor.play {
-            animation: wishMeteorRun 2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            animation: wishMeteorRun 2.2s cubic-bezier(0.2, 0.7, 0.4, 1) forwards;
         }
         @keyframes wishMeteorRun {
             0% {
-                top: -10%;
-                left: -30%;
-                width: 100px;
+                top: -15%;
+                left: -35%;
                 opacity: 0;
+                transform: rotate(35deg) scale(0.6);
             }
-            15% {
+            12% {
                 opacity: 1;
             }
             50% {
                 top: 35%;
                 left: 35%;
-                width: 400px;
                 opacity: 1;
+                transform: rotate(35deg) scale(1);
             }
             75% {
-                top: 45%;
-                left: 45%;
-                width: 250px;
+                top: 48%;
+                left: 48%;
                 opacity: 1;
+                transform: rotate(35deg) scale(0.9);
             }
             100% {
                 top: 55%;
                 left: 55%;
-                width: 0px;
+                opacity: 0;
+                transform: rotate(35deg) scale(0);
+            }
+        }
+
+        /* 5-star Glowing Stellar Head */
+        .wish-meteor-head {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 
+                0 0 20px #ffffff,
+                0 0 45px #ffde59,
+                0 0 90px #ff7700;
+            z-index: 2;
+        }
+        /* Star head cross sparkles */
+        .wish-meteor-spark-h {
+            position: absolute;
+            right: -61px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 150px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ffffff, transparent);
+            filter: drop-shadow(0 0 10px #ffde59);
+            z-index: 3;
+        }
+        .wish-meteor-spark-v {
+            position: absolute;
+            right: 13px;
+            top: -41px;
+            width: 2px;
+            height: 110px;
+            background: linear-gradient(180deg, transparent, #ffffff, transparent);
+            filter: drop-shadow(0 0 10px #ffde59);
+            z-index: 3;
+        }
+
+        /* Overlapping Razor-Sharp Filaments */
+        .wish-meteor-trail-gold {
+            position: absolute;
+            right: 15px;
+            top: calc(50% - 1.5px);
+            width: 440px;
+            height: 3px;
+            background: linear-gradient(270deg, #ffffff 0%, rgba(255,222,89,0.95) 40%, rgba(255,140,0,0.15) 80%, transparent 100%);
+            z-index: 1;
+        }
+        .wish-meteor-trail-blue {
+            position: absolute;
+            right: 15px;
+            top: calc(50% - 8px);
+            width: 320px;
+            height: 1px;
+            background: linear-gradient(270deg, #ffffff 0%, rgba(0,210,255,0.9) 30%, rgba(0,70,255,0.15) 75%, transparent 100%);
+            opacity: 0.9;
+            z-index: 1;
+        }
+        .wish-meteor-trail-pink {
+            position: absolute;
+            right: 15px;
+            top: calc(50% + 5px);
+            width: 280px;
+            height: 1px;
+            background: linear-gradient(270deg, #ffffff 0%, rgba(255,90,180,0.85) 35%, rgba(255,30,100,0) 80%, transparent 100%);
+            opacity: 0.95;
+            z-index: 1;
+        }
+        .wish-meteor-trail-glow {
+            position: absolute;
+            right: 15px;
+            top: calc(50% - 16px);
+            width: 380px;
+            height: 32px;
+            background: linear-gradient(270deg, rgba(255,222,89,0.3) 0%, rgba(255,120,50,0.08) 55%, transparent 100%);
+            filter: blur(8px);
+            opacity: 0.85;
+            z-index: 0;
+        }
+
+        /* Giant Rainbow Halo Ring */
+        .wish-halo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            z-index: 100001;
+            pointer-events: none;
+            box-sizing: border-box;
+        }
+        .wish-halo.play {
+            animation: wishHaloRing 1.3s cubic-bezier(0.1, 0.8, 0.25, 1) forwards;
+        }
+        @keyframes wishHaloRing {
+            0% {
+                width: 10px;
+                height: 10px;
+                border: 6px solid rgba(255,222,89,0.8);
+                box-shadow: 
+                    0 0 15px rgba(0, 190, 255, 0.6), 
+                    inset 0 0 15px rgba(255, 100, 200, 0.6);
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+            15% {
+                opacity: 0.85;
+            }
+            80% {
+                border: 2.5px solid rgba(0, 210, 255, 0.45);
+                box-shadow: 
+                    0 0 45px rgba(255, 100, 200, 0.35), 
+                    inset 0 0 45px rgba(255, 222, 89, 0.35);
+            }
+            100% {
+                width: 950px;
+                height: 950px;
+                border: 0px solid transparent;
+                box-shadow: 
+                    0 0 70px rgba(255, 255, 255, 0), 
+                    inset 0 0 70px rgba(255, 255, 255, 0);
+                transform: translate(-50%, -50%) scale(1.15);
                 opacity: 0;
             }
         }
@@ -1299,10 +1426,22 @@
         <div class="wish-nebula"></div>
         <button class="wish-skip-btn" onclick="skipWishAnimation()">跳過 Skip</button>
         <div class="wish-meteor-container" id="wishMeteorContainer">
-            <div class="wish-meteor" id="wishMeteor"></div>
+            <div class="wish-meteor" id="wishMeteor">
+                <!-- Razor-sharp filaments trailing -->
+                <div class="wish-meteor-trail-glow"></div>
+                <div class="wish-meteor-trail-pink"></div>
+                <div class="wish-meteor-trail-blue"></div>
+                <div class="wish-meteor-trail-gold"></div>
+                <!-- 5-star Glowing Stellar Head -->
+                <div class="wish-meteor-head"></div>
+                <!-- Cross Lens Flares -->
+                <div class="wish-meteor-spark-h"></div>
+                <div class="wish-meteor-spark-v"></div>
+            </div>
         </div>
         <div class="wish-burst" id="wishBurst"></div>
         <div class="wish-shockwave" id="wishShockwave"></div>
+        <div class="wish-halo" id="wishHalo"></div>
         <div id="wishRaysContainer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100002;"></div>
         
         <!-- Showcase Stage -->
@@ -2115,6 +2254,7 @@
             const cardsContainer = document.getElementById('wishCardsContainer');
             const continueBtn = document.getElementById('wishContinueBtn');
             const raysContainer = document.getElementById('wishRaysContainer');
+            const halo = document.getElementById('wishHalo');
 
             // 3. 初始重置狀態
             overlay.classList.add('active');
@@ -2126,6 +2266,7 @@
             continueBtn.classList.remove('show');
             cardsContainer.innerHTML = '';
             raysContainer.innerHTML = '';
+            if (halo) halo.classList.remove('play');
 
             // 4. 將抽選出的掃區結果 (`latestResults`) 動態渲染為極致華麗的 5 星卡牌
             latestResults.forEach(a => {
@@ -2153,10 +2294,11 @@
             }, 100);
             wishAnimationTimers.push(timer1);
 
-            // 6. 播放流星中心撞擊金色衝擊波與閃光爆炸 (Burst & Shockwave & Light Rays)
+            // 6. 播放流星中心撞擊金色衝擊波與閃光爆炸 (Burst & Shockwave & Light Rays & Halo Ring)
             const timer2 = setTimeout(() => {
                 burst.classList.add('play');
                 shockwave.classList.add('play');
+                if (halo) halo.classList.add('play');
 
                 // 動態生成 12 條強烈旋轉放射光束 (12 rotating light rays)
                 for (let i = 0; i < 12; i++) {
@@ -2302,10 +2444,12 @@
             const title = document.getElementById('wishShowcaseTitle');
             const cardsContainer = document.getElementById('wishCardsContainer');
             const continueBtn = document.getElementById('wishContinueBtn');
+            const halo = document.getElementById('wishHalo');
 
             meteor.classList.remove('play');
             burst.classList.remove('play');
             shockwave.classList.remove('play');
+            if (halo) halo.classList.remove('play');
             
             showcase.classList.add('active');
             title.classList.add('show');
