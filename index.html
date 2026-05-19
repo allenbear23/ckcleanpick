@@ -1694,7 +1694,7 @@
             resultsWrapper.style.display = "block";
             document.getElementById('postDrawActions').style.display = "flex";
             
-            const ts = new Date().toLocaleString();
+            const ts = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
             $("#tsTop").textContent = "產出時間：" + ts;
             $("#tsFooter").textContent = ts;
 
@@ -1904,7 +1904,7 @@
 
             parts.push(toCSV([["候補人員（本日未分配）"], ...standby.map(m => [labelSN(m)])]));
             parts.push(toCSV([["備註事項"], ["請任何假需找代理人。"], ["原則上每週由衛生股長抽新名單，公告於班群。"]]));
-            parts.push(toCSV([["產出時間", new Date().toLocaleString()]]));
+            parts.push(toCSV([["產出時間", new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })]]));
 
             return "\uFEFF" + parts.join("\n\n");
         }
@@ -2491,7 +2491,7 @@
         function testVercelPush() {
             const localGroupId = localStorage.getItem('clean_local_group_id');
             const savedPassword = localStorage.getItem('clean_push_password') || '';
-            const testMsg = `隨機掃地工作系統 (Vercel Standalone) 串接測試成功！\n測試時間：${new Date().toLocaleString()}`;
+            const testMsg = `隨機掃地工作系統 (Vercel Standalone) 串接測試成功！\n測試時間：${new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`;
             
             showToast('正在傳送測試信號...', 'success');
 

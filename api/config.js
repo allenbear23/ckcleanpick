@@ -124,7 +124,7 @@ module.exports = async (req, res) => {
         students,
         defs,
         prefs: prefs || {},
-        updatedAt: new Date().toLocaleString()
+        updatedAt: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
       };
 
       let success = false;
