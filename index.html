@@ -1966,6 +1966,33 @@
             msg += `====================\n`;
             msg += `候補名單（今日休息）：\n`;
             msg += ` ${standby.map(m => labelSN(m)).join('、') || '（無）'}\n`;
+            
+            // 公平性追蹤數據
+            let studentHistory = JSON.parse(localStorage.getItem('clean_pick_student_history') || '{}');
+            let roundCounter = parseInt(localStorage.getItem('clean_pick_round_counter') || '0', 10);
+            const statsList = Object.values(studentHistory).filter(s => {
+                return students.some(cur => cur.name === s.name && cur.seat === s.seat);
+            });
+
+            if (statsList.length > 0 && roundCounter > 0) {
+                const sorted = [...statsList].sort((a, b) => {
+                    if (b.consecutiveStandby !== a.consecutiveStandby) {
+                        return b.consecutiveStandby - a.consecutiveStandby;
+                    }
+                    if (a.lastDrawnRound !== b.lastDrawnRound) {
+                        return a.lastDrawnRound - b.lastDrawnRound;
+                    }
+                    return a.drawCount - b.drawCount;
+                });
+
+                msg += `====================\n`;
+                msg += `📊 公平性追蹤 (連續休息最久)：\n`;
+                sorted.slice(0, 3).forEach((s, idx) => {
+                    const medal = idx === 0 ? '👑 ' : '';
+                    msg += ` ${idx + 1}. ${medal}座號 ${s.seat} ${s.name} (連休 ${s.consecutiveStandby} 輪｜累計抽中 ${s.drawCount} 次)\n`;
+                });
+            }
+
             msg += `====================\n`;
             msg += `大家辛苦了！放學後請將負責區域清理乾淨，謝謝合作！`;
 
@@ -2296,6 +2323,66 @@
                 margin: "sm",
                 wrap: true
             });
+
+            // 4. 公平性追蹤排行榜區塊
+            let studentHistoryFlex = JSON.parse(localStorage.getItem('clean_pick_student_history') || '{}');
+            let roundCounterFlex = parseInt(localStorage.getItem('clean_pick_round_counter') || '0', 10);
+            const statsListFlex = Object.values(studentHistoryFlex).filter(s => {
+                return students.some(cur => cur.name === s.name && cur.seat === s.seat);
+            });
+
+            if (statsListFlex.length > 0 && roundCounterFlex > 0) {
+                const sortedFlex = [...statsListFlex].sort((a, b) => {
+                    if (b.consecutiveStandby !== a.consecutiveStandby) {
+                        return b.consecutiveStandby - a.consecutiveStandby;
+                    }
+                    if (a.lastDrawnRound !== b.lastDrawnRound) {
+                        return a.lastDrawnRound - b.lastDrawnRound;
+                    }
+                    return a.drawCount - b.drawCount;
+                });
+
+                bubbleContents.push({
+                    type: "separator",
+                    margin: "lg"
+                });
+
+                bubbleContents.push({
+                    type: "text",
+                    text: "📊 公平性追蹤 (連續休息最久)",
+                    weight: "bold",
+                    size: "sm",
+                    color: "#3b82f6",
+                    margin: "lg"
+                });
+
+                const top3 = sortedFlex.slice(0, 3);
+                top3.forEach((s, idx) => {
+                    const medal = idx === 0 ? "👑 " : `${idx + 1}. `;
+                    bubbleContents.push({
+                        type: "box",
+                        layout: "horizontal",
+                        margin: "md",
+                        contents: [
+                            {
+                                type: "text",
+                                text: `${medal}座號 ${s.seat} ${s.name}`,
+                                size: "xs",
+                                color: "#f3f4f6",
+                                flex: 6
+                            },
+                            {
+                                type: "text",
+                                text: `連休 ${s.consecutiveStandby} 輪/累計 ${s.drawCount} 次`,
+                                size: "xs",
+                                color: "#9ca3af",
+                                align: "right",
+                                flex: 6
+                            }
+                        ]
+                    });
+                });
+            }
 
             // Build full Bubble payload
             const payload = {
