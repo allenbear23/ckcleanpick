@@ -2403,18 +2403,24 @@
 
                         if (!isChecked) {
                             rowContents.push({
-                                type: "text",
-                                text: "[📥 簽到]",
-                                size: "xs",
-                                color: "#3b82f6",
-                                weight: "bold",
-                                align: "right",
+                                type: "box",
+                                layout: "vertical",
                                 flex: 4,
                                 action: {
                                     type: "uri",
                                     label: "簽到",
                                     uri: checkinUrl
-                                }
+                                },
+                                contents: [
+                                    {
+                                        type: "text",
+                                        text: "[📥 簽到]",
+                                        size: "xs",
+                                        color: "#3b82f6",
+                                        weight: "bold",
+                                        align: "right"
+                                    }
+                                ]
                             });
                         }
 
