@@ -1709,10 +1709,13 @@
             // 1. Render Officers (rolesTable)
             const rt = $("#rolesTable tbody");
             rt.innerHTML = "";
+            const hLead = roles ? roles.hygieneLead : null;
+            const eLead = roles ? roles.envLead : null;
+            const hOfficer = roles ? roles.hygieneOfficer : null;
             [
-                ["衛生股長", roles.hygieneLead],
-                ["環保股長", roles.envLead],
-                ["衛生幹事", roles.hygieneOfficer]
+                ["衛生股長", hLead],
+                ["環保股長", eLead],
+                ["衛生幹事", hOfficer]
             ].forEach(([title, obj]) => {
                 const tr = document.createElement("tr");
                 tr.innerHTML = `<td><b>${title}</b></td><td>${obj ? escapeHtml(labelSN(obj)) : "（未指定）"}</td>`;
@@ -2831,7 +2834,7 @@
                     // Update local state
                     checkinStates[seat] = true;
                     localStorage.setItem('clean_checkin_states', JSON.stringify(checkinStates));
-                    if (typeof renderResults === 'function') renderResults(true);
+                    if (typeof renderResults === 'function' && latestResults && latestResults.length > 0) renderResults(true);
 
                     // Play success state
                     const card = modal.querySelector('.card');
@@ -2855,7 +2858,7 @@
                     console.warn(err);
                     checkinStates[seat] = true;
                     localStorage.setItem('clean_checkin_states', JSON.stringify(checkinStates));
-                    if (typeof renderResults === 'function') renderResults(true);
+                    if (typeof renderResults === 'function' && latestResults && latestResults.length > 0) renderResults(true);
                     
                     const card = modal.querySelector('.card');
                     card.innerHTML = `
