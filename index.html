@@ -2623,6 +2623,8 @@
                 if (res.ok) {
                     showToast('成功在背景自動推送至 LINE 班級群組！');
                 } else {
+                    console.error("LINE Push failure detailed response data:", data);
+                    alert(`推送失敗原因: ${data.error || '未知錯誤'}\n\nLINE 詳細資訊: ${JSON.stringify(data.details || {})}`);
                     showToast(`推送失敗: ${data.error || '未知錯誤'}`, 'error');
                 }
                 pushBtn.disabled = false;

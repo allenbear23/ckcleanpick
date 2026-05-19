@@ -87,6 +87,7 @@ module.exports = async (req, res) => {
     }
 
     if (!response.ok) {
+      console.error("LINE Messaging API failure details:", responseText);
       return res.status(response.status).json({
         error: 'Failed to push message to LINE',
         details: responseData
