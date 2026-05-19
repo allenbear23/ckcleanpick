@@ -865,17 +865,13 @@
             height: 100vh;
             background: radial-gradient(circle at center, #0e172e 0%, #030712 100%);
             z-index: 100000;
-            overflow-x: hidden;
-            overflow-y: auto;
+            overflow: hidden;
             display: none;
             opacity: 0;
             transition: opacity 0.6s ease;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            flex-direction: column;
-            justify-content: flex-start;
+            justify-content: center;
             align-items: center;
-            padding: 80px 20px 100px 20px;
-            box-sizing: border-box;
         }
         #wishOverlay.active {
             display: flex;
@@ -883,7 +879,7 @@
         }
         /* Stars backdrop */
         .wish-stars {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
@@ -906,7 +902,7 @@
         }
         /* Skip Button */
         .wish-skip-btn {
-            position: fixed;
+            position: absolute;
             top: 25px;
             right: 25px;
             background: rgba(255, 255, 255, 0.08);
@@ -1205,7 +1201,7 @@
 
         /* ===== Premium Cosmic Nebulas, Light Rays, and Lens Flares ===== */
         .wish-nebula {
-            position: fixed;
+            position: absolute;
             top: -50%;
             left: -50%;
             width: 200%;
@@ -1324,10 +1320,14 @@
         .wish-showcase {
             display: none;
             width: 100%;
+            height: 100%;
             max-width: 1200px;
-            padding: 20px;
+            padding: 80px 20px 120px 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            overflow-x: hidden;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
             position: relative;
             z-index: 10;
