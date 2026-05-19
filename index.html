@@ -1189,6 +1189,41 @@
                     <button class="btn" style="background: #10b981; border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);" onclick="testVercelPush()">⚡ 發送測試信號到 LINE</button>
                 </div>
             </div>
+
+            <!-- 每週自動排程抽選與 LINE 推送設定卡片 -->
+            <div class="card" style="margin-top: 25px;">
+                <div class="card-title">
+                    <svg class="title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    每週自動排程抽選與 LINE 推送設定
+                </div>
+                <p style="font-size: 0.95rem; margin-bottom: 20px; line-height: 1.6; color: var(--text-secondary);">
+                    您可以將目前網頁中的「班級名冊」、「掃區配置」與「幹部設定」同步到 Vercel 雲端，系統會利用 <b>Vercel Cron Jobs</b> 每週一早上 8:00 (台北時間) 自動為全班重新抽籤並推送至群組，無需任何人工操作！
+                </p>
+
+                <!-- Cloud Cron Status Block -->
+                <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 6px; border: 1px solid var(--panel-border); margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                        <strong>雲端排程狀態：</strong>
+                        <span id="cronDatabaseBadge" class="ts-badge" style="background: var(--danger); color: white;">未連接雲端資料庫</span>
+                    </div>
+                    <div style="font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary);" id="cronSyncStatusText">
+                        正在向 Vercel 伺服器探測排程狀態...
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <button class="btn" style="background: var(--primary); border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);" onclick="syncConfigToCloud()">
+                        📤 同步目前設定到雲端
+                    </button>
+                    <button class="btn-secondary" onclick="triggerCronDrawTest()">
+                        ⚡ 立即手動測試雲端排程抽選
+                    </button>
+                </div>
+                
+                <div class="note" style="margin-top: 15px; margin-bottom: 0;">
+                    <b>Vercel KV 資料庫提示</b>：自動排程需要依賴持久化的雲端資料庫。請先前往您的 Vercel 儀表板中的 <b>Storage</b> 頁面點選建立 KV 資料庫，並連接 (Link) 至此專案，即可無縫啟用。
+                </div>
+            </div>
         </div>
 
         <!-- Footer -->
@@ -2003,6 +2038,124 @@
                     configPwdContainer.style.display = 'none';
                     lotteryPwdContainer.style.display = 'none';
                 });
+
+            // 查詢雲端排程設定狀態
+            checkCloudConfigStatus();
+        }
+
+        function checkCloudConfigStatus() {
+            const dbBadge = document.getElementById('cronDatabaseBadge');
+            const syncStatusText = document.getElementById('cronSyncStatusText');
+            if (!dbBadge || !syncStatusText) return;
+
+            fetch('/api/config')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.hasKV) {
+                        dbBadge.style.background = 'var(--success)';
+                        dbBadge.style.color = 'white';
+                        dbBadge.innerText = '已連接 Vercel KV (雲端儲存啟用)';
+                    } else {
+                        dbBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+                        dbBadge.style.color = 'var(--danger)';
+                        dbBadge.innerText = '本機快取暫存模式 (無 Vercel KV)';
+                    }
+
+                    if (data && data.hasCloudConfig) {
+                        syncStatusText.innerHTML = `
+                            <span style="color:var(--success); font-weight:bold;">已成功同步雲端設定！</span><br>
+                            包含 <strong>${data.config.studentCount}</strong> 人名冊，<strong>${data.config.defsCount}</strong> 個掃區。<br>
+                            上次同步時間：<span style="color:var(--accent);">${data.config.updatedAt}</span>。<br>
+                            雲端排程機器人將於<span style="color:var(--primary); font-weight:bold;">每週一早上 8:00 (台北時間)</span>自動重新抽籤並推送至群組。
+                        `;
+                    } else {
+                        syncStatusText.innerHTML = `
+                            <span style="color:var(--text-secondary);">尚未同步排程設定到雲端。</span><br>
+                            請點選下方「同步目前設定到雲端」上傳目前名冊與設定以啟用自動排程。
+                        `;
+                    }
+                })
+                .catch(err => {
+                    console.warn('Unable to query local /api/config.', err);
+                    dbBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+                    dbBadge.style.color = 'var(--danger)';
+                    dbBadge.innerText = '雲端 API 無法連線';
+                    syncStatusText.innerText = '無法連線至雲端設定介面。請將專案部署至 Vercel 即可自動啟用雲端排程！';
+                });
+        }
+
+        function syncConfigToCloud() {
+            if (students.length === 0) {
+                showToast('請先載入學生名冊！', 'error');
+                return;
+            }
+            const defs = getAreaDefsFromUI();
+            if (defs.length === 0) {
+                showToast('請至少設定一個掃區項目！', 'error');
+                return;
+            }
+
+            const localGroupId = document.getElementById('localGroupIdInput').value.trim();
+            const prefs = {
+                hSeat: $("#seatH").value.trim(),
+                eSeat: $("#seatE").value.trim(),
+                oSeat: $("#seatO").value.trim(),
+                localGroupId
+            };
+            const password = localStorage.getItem('clean_push_password') || '';
+
+            showToast('正在同步設定至 Vercel 雲端...', 'info');
+
+            fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ students, defs, prefs, password })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || '同步失敗');
+                }
+                return data;
+            })
+            .then(data => {
+                showToast(data.message || '同步排程設定成功！', 'success');
+                checkCloudConfigStatus();
+            })
+            .catch(err => {
+                showToast(err.message, 'error');
+            });
+        }
+
+        function triggerCronDrawTest() {
+            if (!confirm('此動作會立即在 Vercel 雲端執行一次隨機抽籤，並將結果推送至您配置的 LINE 群組。確定要執行嗎？')) {
+                return;
+            }
+
+            showToast('雲端排程抽籤測試中，請稍候...', 'info');
+
+            fetch('/api/cron')
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || '測試執行失敗');
+                }
+                return data;
+            })
+            .then(data => {
+                let msg = `雲端自動抽籤測試完成！第 ${data.round} 輪。`;
+                if (data.pushedToLine) {
+                    msg += ' 成功推送至 LINE 群組！';
+                    showToast(msg, 'success');
+                } else {
+                    msg += ' 但推送至 LINE 失敗 (可能未配置金鑰/群組 ID)。';
+                    showToast(msg, 'error');
+                }
+            })
+            .catch(err => {
+                showToast(err.message, 'error');
+            });
+        }
         }
 
         function saveLocalPassword() {
