@@ -2390,34 +2390,39 @@
                         const isChecked = !!checkinStates[m.seat];
                         const checkinUrl = `https://ckc091.vercel.app/?checkin=${m.seat}&name=${encodeURIComponent(m.name)}`;
                         
+                        const rowContents = [
+                            {
+                                type: "text",
+                                text: `  (${pad2(m.seat)}) ${m.name} ${isChecked ? "✅ 已完成" : "⏳ 待打掃"}`,
+                                size: "xs",
+                                color: isChecked ? "#9ca3af" : "#f3f4f6",
+                                flex: isChecked ? 12 : 8,
+                                align: "left"
+                            }
+                        ];
+
+                        if (!isChecked) {
+                            rowContents.push({
+                                type: "text",
+                                text: "[📥 簽到]",
+                                size: "xs",
+                                color: "#3b82f6",
+                                weight: "bold",
+                                align: "right",
+                                flex: 4,
+                                action: {
+                                    type: "uri",
+                                    label: "簽到",
+                                    uri: checkinUrl
+                                }
+                            });
+                        }
+
                         areaRows.push({
                             type: "box",
                             layout: "horizontal",
                             margin: "sm",
-                            contents: [
-                                {
-                                    type: "text",
-                                    text: `  (${pad2(m.seat)}) ${m.name} ${isChecked ? "✅ 已完成" : "⏳ 待打掃"}`,
-                                    size: "xs",
-                                    color: isChecked ? "#9ca3af" : "#f3f4f6",
-                                    flex: 8,
-                                    align: "left"
-                                },
-                                {
-                                    type: "text",
-                                    text: isChecked ? " " : "[📥 簽到]",
-                                    size: "xs",
-                                    color: "#3b82f6",
-                                    weight: "bold",
-                                    align: "right",
-                                    flex: 4,
-                                    action: isChecked ? null : {
-                                        type: "uri",
-                                        label: "簽到",
-                                        uri: checkinUrl
-                                    }
-                                }
-                            ]
+                            contents: rowContents
                         });
                     });
                 }
