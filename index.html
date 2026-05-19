@@ -1987,7 +1987,9 @@
 
             // 2. 獲取原神 Wish UI DOM 節點
             const overlay = document.getElementById('wishOverlay');
-            const meteor = document.getElementById('wishMeteor');
+            const meteorWrapper = document.getElementById('wishMeteorWrapper');
+            const lensFlare = document.getElementById('wishLensFlare');
+            const raysContainer = document.getElementById('wishRaysContainer');
             const burst = document.getElementById('wishBurst');
             const shockwave = document.getElementById('wishShockwave');
             const showcase = document.getElementById('wishShowcase');
@@ -1997,7 +1999,9 @@
 
             // 3. 初始重置狀態
             overlay.classList.add('active');
-            meteor.classList.remove('play');
+            meteorWrapper.classList.remove('play');
+            lensFlare.classList.remove('play');
+            raysContainer.classList.remove('play');
             burst.classList.remove('play');
             shockwave.classList.remove('play');
             showcase.classList.remove('active');
@@ -2024,17 +2028,19 @@
                 cardsContainer.appendChild(card);
             });
 
-            // 5. 播放流星飛越 (Meteor animation)
+            // 5. 播放三層流星飛越 (Meteor wrapper animation)
             const timer1 = setTimeout(() => {
-                meteor.classList.add('play');
+                meteorWrapper.classList.add('play');
                 spawnMeteorSparkleTrail();
             }, 100);
             wishAnimationTimers.push(timer1);
 
-            // 6. 播放流星中心撞擊金色衝擊波與閃光爆炸 (Burst & Shockwave)
+            // 6. 播放流星中心撞擊金色衝擊波、閃光爆炸、旋轉神聖光束及橫向透鏡耀光 (Burst, Shockwave, Rays & Flare)
             const timer2 = setTimeout(() => {
                 burst.classList.add('play');
                 shockwave.classList.add('play');
+                lensFlare.classList.add('play');
+                raysContainer.classList.add('play');
             }, 1300);
             wishAnimationTimers.push(timer2);
 
@@ -2153,7 +2159,9 @@
             wishAnimationTimers = [];
             isWishAnimationRunning = false;
 
-            const meteor = document.getElementById('wishMeteor');
+            const meteorWrapper = document.getElementById('wishMeteorWrapper');
+            const lensFlare = document.getElementById('wishLensFlare');
+            const raysContainer = document.getElementById('wishRaysContainer');
             const burst = document.getElementById('wishBurst');
             const shockwave = document.getElementById('wishShockwave');
             const showcase = document.getElementById('wishShowcase');
@@ -2161,7 +2169,9 @@
             const cardsContainer = document.getElementById('wishCardsContainer');
             const continueBtn = document.getElementById('wishContinueBtn');
 
-            meteor.classList.remove('play');
+            meteorWrapper.classList.remove('play');
+            lensFlare.classList.remove('play');
+            raysContainer.classList.remove('play');
             burst.classList.remove('play');
             shockwave.classList.remove('play');
             
