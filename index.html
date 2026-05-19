@@ -855,9 +855,343 @@
             border-top: 2px solid #808080;
             background: #c0c0c0;
         }
+
+        /* ===== Genshin Impact Wish Animation Styles ===== */
+        #wishOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, #0e172e 0%, #030712 100%);
+            z-index: 100000;
+            overflow: hidden;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            justify-content: center;
+            align-items: center;
+        }
+        #wishOverlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        /* Stars backdrop */
+        .wish-stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90px 150px, #ffde59, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 150px 240px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 220px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 280px 120px, #ff4e88, rgba(0,0,0,0));
+            background-size: 300px 300px;
+            opacity: 0.5;
+            animation: wishStarsFloat 60s linear infinite;
+        }
+        @keyframes wishStarsFloat {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-300px); }
+        }
+        /* Skip Button */
+        .wish-skip-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #e5e7eb;
+            padding: 8px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            cursor: pointer;
+            z-index: 100005;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .wish-skip-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+        /* Shooting Star / Meteor */
+        .wish-meteor-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100001;
+        }
+        .wish-meteor {
+            position: absolute;
+            top: -150px;
+            left: -150px;
+            width: 300px;
+            height: 80px;
+            background: linear-gradient(90deg, rgba(255,223,89,0) 0%, rgba(255,223,89,0.9) 70%, #ffffff 100%);
+            transform: rotate(35deg);
+            border-radius: 999px;
+            filter: drop-shadow(0 0 25px #ffde59) drop-shadow(0 0 50px #ff9f43);
+            opacity: 0;
+        }
+        .wish-meteor.play {
+            animation: wishMeteorRun 2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        @keyframes wishMeteorRun {
+            0% {
+                top: -10%;
+                left: -30%;
+                width: 100px;
+                opacity: 0;
+            }
+            15% {
+                opacity: 1;
+            }
+            50% {
+                top: 35%;
+                left: 35%;
+                width: 400px;
+                opacity: 1;
+            }
+            75% {
+                top: 45%;
+                left: 45%;
+                width: 250px;
+                opacity: 1;
+            }
+            100% {
+                top: 55%;
+                left: 55%;
+                width: 0px;
+                opacity: 0;
+            }
+        }
+        /* Golden Burst Explosion */
+        .wish-burst {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0vmax;
+            height: 0vmax;
+            background: radial-gradient(circle, #ffffff 0%, #ffde59 30%, #ff9f43 60%, rgba(3,7,18,0) 100%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100002;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .wish-burst.play {
+            animation: wishBurstExp 1.2s ease-out forwards;
+        }
+        @keyframes wishBurstExp {
+            0% {
+                width: 0vmax;
+                height: 0vmax;
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            100% {
+                width: 250vmax;
+                height: 250vmax;
+                opacity: 0;
+            }
+        }
+        /* Shockwaves */
+        .wish-shockwave {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 4px solid #ffde59;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            z-index: 100002;
+            pointer-events: none;
+        }
+        .wish-shockwave.play {
+            animation: wishShockwaveScale 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+        @keyframes wishShockwaveScale {
+            0% {
+                width: 50px;
+                height: 50px;
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            100% {
+                width: 800px;
+                height: 800px;
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0;
+                border-width: 1px;
+            }
+        }
+        /* Showcase cards stage */
+        .wish-showcase {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100003;
+            perspective: 1000px;
+        }
+        .wish-showcase.active {
+            display: flex;
+        }
+        /* Top Title */
+        .wish-showcase-title {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 0 15px rgba(255,222,89,0.6);
+            margin-bottom: 40px;
+            text-align: center;
+            letter-spacing: 2px;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.6s ease;
+        }
+        .wish-showcase-title.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* Single Card wrapper */
+        .wish-cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            width: 100%;
+        }
+        .wish-card {
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+            border: 2px solid #ffde59;
+            box-shadow: 0 0 25px rgba(255, 222, 89, 0.15), inset 0 0 15px rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            width: 220px;
+            padding: 20px;
+            text-align: center;
+            transform: scale(0.6) rotateY(90deg);
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .wish-card.reveal {
+            transform: scale(1) rotateY(0deg);
+            opacity: 1;
+        }
+        .wish-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.1) 50%, transparent 55%);
+            transform: rotate(45deg);
+            transition: all 0.6s;
+            pointer-events: none;
+        }
+        .wish-card:hover::before {
+            left: 100%;
+        }
+        .wish-card-rank {
+            color: #ffde59;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(255,222,89,0.8);
+        }
+        .wish-card-name {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        .wish-card-members {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: center;
+        }
+        .wish-card-member {
+            font-size: 0.95rem;
+            color: #d1d5db;
+            background: rgba(255,255,255,0.05);
+            padding: 4px 12px;
+            border-radius: 99px;
+            width: 80%;
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.03);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        /* Bottom Continue Button */
+        .wish-continue-btn {
+            background: linear-gradient(90deg, #ff9f43 0%, #ffde59 100%);
+            border: none;
+            color: #030712;
+            padding: 12px 45px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            border-radius: 9999px;
+            cursor: pointer;
+            margin-top: 40px;
+            box-shadow: 0 0 20px rgba(255, 222, 89, 0.4);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+            letter-spacing: 1px;
+            z-index: 100004;
+        }
+        .wish-continue-btn.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .wish-continue-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 222, 89, 0.6);
+        }
     </style>
 </head>
 <body>
+    <!-- Genshin Impact Wish Animation Fullscreen Overlay -->
+    <div id="wishOverlay">
+        <div class="wish-stars"></div>
+        <button class="wish-skip-btn" onclick="skipWishAnimation()">跳過 Skip</button>
+        <div class="wish-meteor-container" id="wishMeteorContainer">
+            <div class="wish-meteor" id="wishMeteor"></div>
+        </div>
+        <div class="wish-burst" id="wishBurst"></div>
+        <div class="wish-shockwave" id="wishShockwave"></div>
+        
+        <!-- Showcase Stage -->
+        <div class="wish-showcase" id="wishShowcase">
+            <h2 class="wish-showcase-title" id="wishShowcaseTitle">✨ 恭喜獲得以下 5 星工作指派！ ✨</h2>
+            <div class="wish-cards-container" id="wishCardsContainer"></div>
+            <button class="wish-continue-btn" id="wishContinueBtn" onclick="closeWishAnimation()">點擊繼續</button>
+        </div>
+    </div>
 
     <div class="container" id="mainContainer">
 
@@ -1551,33 +1885,11 @@
                 return;
             }
 
-            // Animation Phase
-            const drawArea = document.getElementById('drawArea');
-            drawArea.innerHTML = `
-                <div class="shuffle-animation" id="shuffler">系統隨機配置中...</div>
-                <p class="muted">正在進行公平工作分派，請稍後...</p>
-            `;
-
-
-
-            const nameList = students.map(s => s.name);
-            let animCount = 0;
-            const interval = setInterval(() => {
-                const name = nameList[Math.floor(Math.random() * nameList.length)];
-                const area = defs[Math.floor(Math.random() * defs.length)].name;
-                const shuffler = document.getElementById('shuffler');
-                if (shuffler) {
-                    shuffler.innerHTML = `${name} 指派至 ${area}`;
-                }
-                animCount++;
-                if (animCount > 12) {
-                    clearInterval(interval);
-                    executeAllocation(defs);
-                }
-            }, 80);
+            // Start the spectacular Genshin-style Wish Animation!
+            startWishAnimation(defs);
         }
 
-        function executeAllocation(defs) {
+        function executeAllocation(defs, isQuiet = false) {
             try {
                 document.getElementById('globalErr').textContent = '';
                 
@@ -1627,26 +1939,260 @@
                 renderResults();
                 generateLineMessage();
 
-                // Trigger confetti fireworks
-                confetti({
-                    particleCount: 120,
-                    spread: 80,
-                    origin: { y: 0.6 },
-                    colors: ['#3b82f6', '#8b5cf6', '#10b981']
-                });
+                if (!isQuiet) {
+                    // Trigger confetti fireworks
+                    confetti({
+                        particleCount: 120,
+                        spread: 80,
+                        origin: { y: 0.6 },
+                        colors: ['#3b82f6', '#8b5cf6', '#10b981']
+                    });
 
-                showToast('分派完成！結果已呈現在下方表格。');
+                    showToast('分派完成！結果已呈現在下方表格。');
+                }
 
                 // Enable buttons
                 $("#reshuffleBtn").disabled = false;
                 $("#csvBtn").disabled = false;
             } catch (err) {
                 document.getElementById('globalErr').textContent = err.message;
-                showToast('抽籤失敗：' + err.message, 'error');
+                if (!isQuiet) {
+                    showToast('抽籤失敗：' + err.message, 'error');
+                } else {
+                    throw err;
+                }
                 
                 // Restore Draw Prompt UI
                 updateHelpers();
             }
+        }
+
+        /* ===== 原神抽卡視覺動畫控制 logic ===== */
+        let wishAnimationTimers = [];
+        let isWishAnimationRunning = false;
+
+        function startWishAnimation(defs) {
+            isWishAnimationRunning = true;
+            wishAnimationTimers = [];
+
+            // 1. 在背景先行安靜計算完成工作分派
+            try {
+                executeAllocation(defs, true);
+            } catch (err) {
+                console.error(err);
+                showToast('分派失敗：' + err.message, 'error');
+                isWishAnimationRunning = false;
+                return;
+            }
+
+            // 2. 獲取原神 Wish UI DOM 節點
+            const overlay = document.getElementById('wishOverlay');
+            const meteor = document.getElementById('wishMeteor');
+            const burst = document.getElementById('wishBurst');
+            const shockwave = document.getElementById('wishShockwave');
+            const showcase = document.getElementById('wishShowcase');
+            const title = document.getElementById('wishShowcaseTitle');
+            const cardsContainer = document.getElementById('wishCardsContainer');
+            const continueBtn = document.getElementById('wishContinueBtn');
+
+            // 3. 初始重置狀態
+            overlay.classList.add('active');
+            meteor.classList.remove('play');
+            burst.classList.remove('play');
+            shockwave.classList.remove('play');
+            showcase.classList.remove('active');
+            title.classList.remove('show');
+            continueBtn.classList.remove('show');
+            cardsContainer.innerHTML = '';
+
+            // 4. 將抽選出的掃區結果 (`latestResults`) 動態渲染為極致華麗的 5 星卡牌
+            latestResults.forEach(a => {
+                const card = document.createElement('div');
+                card.className = 'wish-card';
+                
+                const memberListHtml = a.members.map(m => `
+                    <div class="wish-card-member">(${m.seat}) ${escapeHtml(m.name)}</div>
+                `).join('');
+
+                card.innerHTML = `
+                    <div class="wish-card-rank">⭐⭐⭐⭐⭐</div>
+                    <div class="wish-card-name">${escapeHtml(a.name)}</div>
+                    <div class="wish-card-members">
+                        ${memberListHtml || '<div class="wish-card-member muted">（目前缺員）</div>'}
+                    </div>
+                `;
+                cardsContainer.appendChild(card);
+            });
+
+            // 5. 播放流星飛越 (Meteor animation)
+            const timer1 = setTimeout(() => {
+                meteor.classList.add('play');
+                spawnMeteorSparkleTrail();
+            }, 100);
+            wishAnimationTimers.push(timer1);
+
+            // 6. 播放流星中心撞擊金色衝擊波與閃光爆炸 (Burst & Shockwave)
+            const timer2 = setTimeout(() => {
+                burst.classList.add('play');
+                shockwave.classList.add('play');
+            }, 1300);
+            wishAnimationTimers.push(timer2);
+
+            // 7. 開啟展演秀 (Showcase Reveal Stage) 逐一掀牌
+            const timer3 = setTimeout(() => {
+                showcase.classList.add('active');
+                title.classList.add('show');
+                
+                const cards = cardsContainer.querySelectorAll('.wish-card');
+                cards.forEach((card, idx) => {
+                    const timerCard = setTimeout(() => {
+                        card.classList.add('reveal');
+                        triggerCardPopSpark(card);
+                    }, idx * 350);
+                    wishAnimationTimers.push(timerCard);
+                });
+
+                // 當所有 5 星金卡掀牌完成，顯現繼續按鈕
+                const timerBtn = setTimeout(() => {
+                    continueBtn.classList.add('show');
+                    isWishAnimationRunning = false;
+                }, cards.length * 350 + 400);
+                wishAnimationTimers.push(timerBtn);
+
+            }, 2100);
+            wishAnimationTimers.push(timer3);
+        }
+
+        // 生成流星軌跡後方的碎金粒子流 (Sparkle trail)
+        function spawnMeteorSparkleTrail() {
+            const container = document.getElementById('wishMeteorContainer');
+            let count = 0;
+            const trailInterval = setInterval(() => {
+                if (count > 25 || !document.getElementById('wishOverlay').classList.contains('active')) {
+                    clearInterval(trailInterval);
+                    return;
+                }
+                const spark = document.createElement('div');
+                spark.className = 'wish-meteor-spark';
+                
+                const progress = count / 25;
+                const topVal = -10 + progress * 70;
+                const leftVal = -30 + progress * 90;
+                
+                spark.style.top = `${topVal + (Math.random() * 6 - 3)}%`;
+                spark.style.left = `${leftVal + (Math.random() * 6 - 3)}%`;
+                const size = Math.random() * 12 + 8;
+                spark.style.width = `${size}px`;
+                spark.style.height = `${size}px`;
+                spark.style.opacity = '1';
+                
+                container.appendChild(spark);
+                
+                setTimeout(() => {
+                    spark.style.transition = 'all 0.5s ease';
+                    spark.style.opacity = '0';
+                    spark.style.transform = 'scale(0.5)';
+                    setTimeout(() => spark.remove(), 500);
+                }, 100);
+                
+                count++;
+            }, 55);
+            
+            // Register interval to timers for clean skips
+            const dummyTimer = setTimeout(() => clearInterval(trailInterval), 2000);
+            wishAnimationTimers.push(dummyTimer);
+        }
+
+        // 翻開卡牌時噴發四周的散射粒子 (Card pop sparkles)
+        function triggerCardPopSpark(card) {
+            const rect = card.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            for (let i = 0; i < 8; i++) {
+                const sp = document.createElement('div');
+                sp.style.position = 'fixed';
+                sp.style.width = '6px';
+                sp.style.height = '6px';
+                sp.style.borderRadius = '50%';
+                sp.style.background = '#ffde59';
+                sp.style.boxShadow = '0 0 10px #ffde59, 0 0 20px #ff9f43';
+                sp.style.left = `${centerX}px`;
+                sp.style.top = `${centerY}px`;
+                sp.style.zIndex = '100004';
+                sp.style.pointerEvents = 'none';
+                document.body.appendChild(sp);
+
+                const angle = (i / 8) * Math.PI * 2;
+                const velocity = Math.random() * 3 + 4;
+                let curX = centerX;
+                let curY = centerY;
+                let dx = Math.cos(angle) * velocity;
+                let dy = Math.sin(angle) * velocity;
+                let alpha = 1;
+
+                const anim = setInterval(() => {
+                    curX += dx;
+                    curY += dy;
+                    dy += 0.12; // gravity effect
+                    sp.style.left = `${curX}px`;
+                    sp.style.top = `${curY}px`;
+                    alpha -= 0.04;
+                    sp.style.opacity = alpha;
+                    if (alpha <= 0) {
+                        clearInterval(anim);
+                        sp.remove();
+                    }
+                }, 16);
+            }
+        }
+
+        // 跳過動畫 (Skip Wish Animation) ── 瞬間展現所有結果
+        function skipWishAnimation() {
+            wishAnimationTimers.forEach(t => clearTimeout(t));
+            wishAnimationTimers = [];
+            isWishAnimationRunning = false;
+
+            const meteor = document.getElementById('wishMeteor');
+            const burst = document.getElementById('wishBurst');
+            const shockwave = document.getElementById('wishShockwave');
+            const showcase = document.getElementById('wishShowcase');
+            const title = document.getElementById('wishShowcaseTitle');
+            const cardsContainer = document.getElementById('wishCardsContainer');
+            const continueBtn = document.getElementById('wishContinueBtn');
+
+            meteor.classList.remove('play');
+            burst.classList.remove('play');
+            shockwave.classList.remove('play');
+            
+            showcase.classList.add('active');
+            title.classList.add('show');
+            
+            const cards = cardsContainer.querySelectorAll('.wish-card');
+            cards.forEach(card => card.classList.add('reveal'));
+            
+            continueBtn.classList.add('show');
+        }
+
+        // 結束動畫 (Close Wish Overlay) ── 優雅淡出，回歸主報表，並引爆五彩煙火
+        function closeWishAnimation() {
+            const overlay = document.getElementById('wishOverlay');
+            overlay.style.opacity = '0';
+            
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                overlay.style.opacity = '';
+                
+                // 補上最終大功告成五彩紙屑煙火
+                confetti({
+                    particleCount: 160,
+                    spread: 90,
+                    origin: { y: 0.65 },
+                    colors: ['#ffde59', '#ff9f43', '#8b5cf6', '#3b82f6', '#10b981']
+                });
+                
+                showToast('✨ 恭喜獲得 5 星分配！結果已呈現在報表中。', 'success');
+            }, 600);
         }
 
         function renderResultsQuiet() {
