@@ -38,29 +38,7 @@
             --note-border: rgba(245, 158, 11, 0.2);
         }
 
-        /* 經典華國美學風格變數 (當切換到華國美學時使用) */
-        .roc-mode {
-            --bg-color: #d3d3d3;
-            --panel-bg: #f0f0f0;
-            --panel-border: 2px outset #ffffff;
-            --text-primary: #000000;
-            --text-secondary: #333333;
-            --primary: #000080;
-            --primary-glow: none;
-            --accent: #800000;
-            --accent-glow: none;
-            --success: #008000;
-            --danger: #ff0000;
-            --card-bg: #e0e0e0;
-            --font-main: "MingLiU", "PMingLiU", "DFKai-SB", "Microsoft JhengHei", serif;
-            --dropzone-border: #808080;
-            --table-border: #808080;
-            --table-header-bg: #d3d3d3;
-            --pill-bg: #eef2ff;
-            --pill-color: #1e3a8a;
-            --note-bg: #fff7ed;
-            --note-border: #fed7aa;
-        }
+
 
         * {
             box-sizing: border-box;
@@ -562,9 +540,7 @@
             display: inline-block;
             flex-shrink: 0;
         }
-        .roc-mode .title-icon {
-            color: #ff0000;
-        }
+
 
         /* Buttons styling */
         .btn {
@@ -884,19 +860,12 @@
 <body>
 
     <div class="container" id="mainContainer">
-        <!-- 華國跑馬燈公告欄 -->
-        <div class="roc-ticker">
-            <marquee scrollamount="6">溫馨提示：請各位值日生及掃地同學認真做好清潔工作，為班級爭取整潔秩序榮譽紅旗！愛護公物，人人有責！</marquee>
-        </div>
 
         <header id="headerSection">
             <div class="logo-area">
                 <h1 id="titleText">隨機掃地工作 2.0 (獨立安全版)</h1>
                 <p id="subTitleText">完全複製 CK-Clean 所有功能 ─ 內建 Excel 一鍵匯入與 Vercel 隱私 LINE API 安全推送</p>
             </div>
-            <button class="style-toggle" onclick="toggleStyle()" id="styleToggleBtn">
-                切換華國美學版
-            </button>
         </header>
 
         <!-- Navigation Tabs -->
@@ -1253,11 +1222,7 @@
                     </td>`;
                 tb.appendChild(tr);
             });
-            // Update inputs style if in ROC mode
-            if (isRocMode) {
-                document.querySelectorAll('#areasConfig tbody input').forEach(el => el.classList.add('roc-mode'));
-                document.querySelectorAll('#areasConfig tbody button').forEach(el => el.classList.add('roc-mode'));
-            }
+
         }
 
         function updateAreaName(idx, val) {
@@ -1297,7 +1262,6 @@
         let students = [];
         let roles = null, latestResults = [], standby = [];
         let currentTab = 'lottery';
-        let isRocMode = false;
 
         function splitCsvLine(line) {
             const out = []; let cur = ""; let inQ = false;
@@ -1488,9 +1452,7 @@
         function updateHelpers() {
             const drawPrompt = document.getElementById('drawPrompt');
             if (!latestResults.length) {
-                drawPrompt.innerHTML = isRocMode 
-                    ? `【衛生第一】目前名單共 <strong>${students.length}</strong> 人，請點選按鈕隨機指派愛國勞動役。`
-                    : `準備就緒！目前名單共 <strong>${students.length}</strong> 人，點擊下方按鈕開始公平分派。`;
+                drawPrompt.innerHTML = `準備就緒！目前名單共 <strong>${students.length}</strong> 人，點擊下方按鈕開始公平分派。`;
             }
         }
 
@@ -1514,9 +1476,7 @@
                 <p class="muted">正在進行公平工作分派，請稍後...</p>
             `;
 
-            if (isRocMode) {
-                document.getElementById('shuffler').innerHTML = "分配愛國自治青年勞動役中...";
-            }
+
 
             const nameList = students.map(s => s.name);
             let animCount = 0;
@@ -1587,7 +1547,7 @@
                     particleCount: 120,
                     spread: 80,
                     origin: { y: 0.6 },
-                    colors: isRocMode ? ['#ff0000', '#0000ff', '#ffffff', '#ffff00'] : ['#3b82f6', '#8b5cf6', '#10b981']
+                    colors: ['#3b82f6', '#8b5cf6', '#10b981']
                 });
 
                 showToast('分派完成！結果已呈現在下方表格。');
@@ -1609,12 +1569,7 @@
             const resultsWrapper = document.getElementById('resultsWrapper');
 
             // Draw Area Success message
-            drawArea.innerHTML = isRocMode ? `
-                <div class="roc-flash" style="font-size: 3.2rem; font-weight:900; margin-bottom: 10px; font-family:'DFKai-SB'; text-shadow:2px 2px 0px #000000;">大 功 告 成</div>
-                <h2 style="font-weight: 900; font-size: 1.6rem; margin-bottom: 8px; font-family:'DFKai-SB'; color: #000080;">班級勞動役指派完畢！</h2>
-                <p style="color: #ff0000; font-weight: bold; margin-bottom: 20px;">請各位愛國青年遵照指示辦理，為班級爭取榮譽！</p>
-                <button class="btn-secondary" onclick="performDraw()">重新指派工作</button>
-            ` : `
+            drawArea.innerHTML = `
                 <h2 style="font-weight: 800; font-size: 1.4rem; margin-bottom: 6px;">工作分配完成！</h2>
                 <p style="color: var(--text-secondary); margin-bottom: 20px;">名冊與 LINE 訊息已同步生成，請查看下方報表。</p>
                 <button class="btn-secondary" onclick="performDraw()">重新抽籤</button>
@@ -1658,16 +1613,9 @@
             $("#tsTop").textContent = "產出時間：" + ts;
             $("#tsFooter").textContent = ts;
 
-            // Apply theme class
-            if (isRocMode) {
-                resultsWrapper.classList.add('roc-mode');
-                document.querySelectorAll('#resultsWrapper .card').forEach(c => c.classList.add('roc-mode'));
-                document.querySelectorAll('#resultsWrapper table').forEach(t => t.classList.add('roc-mode'));
-            } else {
-                resultsWrapper.classList.remove('roc-mode');
-                document.querySelectorAll('#resultsWrapper .card').forEach(c => c.classList.remove('roc-mode'));
-                document.querySelectorAll('#resultsWrapper table').forEach(t => t.classList.remove('roc-mode'));
-            }
+            resultsWrapper.classList.remove('roc-mode');
+            document.querySelectorAll('#resultsWrapper .card').forEach(c => c.classList.remove('roc-mode'));
+            document.querySelectorAll('#resultsWrapper table').forEach(t => t.classList.remove('roc-mode'));
         }
 
         /* ===== CSV 匯出邏輯 ===== */
@@ -1750,48 +1698,25 @@
             const today = new Date();
             const dateStr = `${today.getFullYear()}/${(today.getMonth()+1).toString().padStart(2, '0')}/${today.getDate().toString().padStart(2, '0')}`;
             
-            let msg = "";
-            if (isRocMode) {
-                msg = `【班級自治整潔勞動派遣令】\n`;
-                msg += `派遣日期：${dateStr}\n`;
-                msg += `適用日期：${dateLabel}\n`;
-                msg += `============================\n`;
-                msg += `幹部幹事名冊：\n`;
-                msg += ` ∙ 衛生股長：${roles.hygieneLead ? labelSN(roles.hygieneLead) : "（無）"}\n`;
-                msg += ` ∙ 環保股長：${roles.envLead ? labelSN(roles.envLead) : "（無）"}\n`;
-                msg += ` ∙ 衛生幹事：${roles.hygieneOfficer ? labelSN(roles.hygieneOfficer) : "（無）"}\n`;
-                msg += `============================\n`;
-                msg += `勞動服務工作配置：\n`;
-                latestResults.forEach((a, i) => {
-                    const mList = a.members.map(m => labelSN(m)).join('、');
-                    msg += ` ${i + 1}. ${a.name} (名額:${a.cap}) ➔ 【 ${mList || '缺員'} 】\n`;
-                });
-                msg += `============================\n`;
-                msg += `候補愛國自治青年：\n`;
-                msg += ` ${standby.map(m => labelSN(m)).join('、') || '（無）'}\n`;
-                msg += `============================\n`;
-                msg += `責任榮譽！請全體受派遣同學準時報到清潔負責區域，為班級爭取最高整潔秩序榮譽！`;
-            } else {
-                msg = `今日隨機掃地工作分配名單\n`;
-                msg += `抽選日期：${dateStr}\n`;
-                msg += `適用日期：${dateLabel}\n`;
-                msg += `====================\n`;
-                msg += `幹部職務：\n`;
-                msg += ` ∙ 衛生股長：${roles.hygieneLead ? labelSN(roles.hygieneLead) : "（無）"}\n`;
-                msg += ` ∙ 環保股長：${roles.envLead ? labelSN(roles.envLead) : "（無）"}\n`;
-                msg += ` ∙ 衛生幹事：${roles.hygieneOfficer ? labelSN(roles.hygieneOfficer) : "（無）"}\n`;
-                msg += `====================\n`;
-                msg += `掃區分配結果：\n`;
-                latestResults.forEach((a, i) => {
-                    const mList = a.members.map(m => labelSN(m)).join('、');
-                    msg += ` ${i + 1}. ${a.name} ： ${mList || '缺員'}\n`;
-                });
-                msg += `====================\n`;
-                msg += `候補名單（今日休息）：\n`;
-                msg += ` ${standby.map(m => labelSN(m)).join('、') || '（無）'}\n`;
-                msg += `====================\n`;
-                msg += `大家辛苦了！放學後請將負責區域清理乾淨，謝謝合作！`;
-            }
+            let msg = `今日隨機掃地工作分配名單\n`;
+            msg += `抽選日期：${dateStr}\n`;
+            msg += `適用日期：${dateLabel}\n`;
+            msg += `====================\n`;
+            msg += `幹部職務：\n`;
+            msg += ` ∙ 衛生股長：${roles.hygieneLead ? labelSN(roles.hygieneLead) : "（無）"}\n`;
+            msg += ` ∙ 環保股長：${roles.envLead ? labelSN(roles.envLead) : "（無）"}\n`;
+            msg += ` ∙ 衛生幹事：${roles.hygieneOfficer ? labelSN(roles.hygieneOfficer) : "（無）"}\n`;
+            msg += `====================\n`;
+            msg += `掃區分配結果：\n`;
+            latestResults.forEach((a, i) => {
+                const mList = a.members.map(m => labelSN(m)).join('、');
+                msg += ` ${i + 1}. ${a.name} ： ${mList || '缺員'}\n`;
+            });
+            msg += `====================\n`;
+            msg += `候補名單（今日休息）：\n`;
+            msg += ` ${standby.map(m => labelSN(m)).join('、') || '（無）'}\n`;
+            msg += `====================\n`;
+            msg += `大家辛苦了！放學後請將負責區域清理乾淨，謝謝合作！`;
 
             lineMessageText = msg;
             document.getElementById('textMessagePreview').innerText = msg;
@@ -2025,10 +1950,10 @@
                     contents: [
                       {
                         type: "text",
-                        text: isRocMode ? "班級自治整潔勞動派遣令" : "班級掃地工作分配",
+                        text: "班級掃地工作分配",
                         weight: "bold",
                         size: "md",
-                        color: isRocMode ? "#facc15" : "#ffffff"
+                        color: "#ffffff"
                       },
                       {
                         type: "text",
@@ -2050,9 +1975,7 @@
                     contents: [
                       {
                         type: "text",
-                        text: isRocMode 
-                            ? "責任榮譽！請準時清潔，爭取整潔秩序榮譽紅旗！" 
-                            : "大家辛苦了！放學後請將負責區域清理乾淨！",
+                        text: "大家辛苦了！放學後請將負責區域清理乾淨！",
                         size: "xxs",
                         color: "#9ca3af",
                         align: "center",
@@ -2143,91 +2066,7 @@
             showToast('覆蓋群組 ID 儲存成功！');
         }
 
-        /* ===== UI 與切換風格邏輯 (雙美學) ===== */
-        function toggleStyle() {
-            const elements = [
-                document.body,
-                document.getElementById('mainContainer'),
-                document.getElementById('headerSection'),
-                document.getElementById('tabsContainer'),
-                document.getElementById('tabLotteryBtn'),
-                document.getElementById('tabLineBtn'),
-                document.getElementById('topInfoBar'),
-                document.getElementById('hintCard'),
-                document.getElementById('uploadCard'),
-                document.getElementById('controlsCard'),
-                document.getElementById('configCard'),
-                document.getElementById('drawCard'),
-                document.getElementById('styleToggleBtn'),
-                document.getElementById('excelDropzone'),
-                document.getElementById('toast'),
-                document.getElementById('footerSection')
-            ];
 
-            const cards = document.querySelectorAll('.card');
-            const textPreviews = document.querySelectorAll('.text-preview');
-            const textareas = document.querySelectorAll('textarea');
-            const inputs = document.querySelectorAll('input');
-            const badges = document.querySelectorAll('.ts-badge');
-            const statusBadges = document.querySelectorAll('.status-badge');
-            const tables = document.querySelectorAll('table');
-
-            isRocMode = !isRocMode;
-            localStorage.setItem('rocMode', isRocMode);
-
-            const allElements = [
-                ...elements, ...cards, ...textPreviews, ...textareas, 
-                ...inputs, ...badges, ...statusBadges, ...tables
-            ];
-            
-            allElements.forEach(el => {
-                if (el) {
-                    if (isRocMode) el.classList.add('roc-mode');
-                    else el.classList.remove('roc-mode');
-                }
-            });
-
-            // Adjust specific text strings to match sincere retro styling
-            const styleToggleBtn = document.getElementById('styleToggleBtn');
-            const titleText = document.getElementById('titleText');
-            const subTitleText = document.getElementById('subTitleText');
-            const drawPrompt = document.getElementById('drawPrompt');
-            const drawBtn = document.getElementById('drawBtn');
-
-            if (isRocMode) {
-                styleToggleBtn.innerHTML = "切換極簡現代版";
-                titleText.innerHTML = "青年建功立業 隨機掃除分派作業系統";
-                titleText.classList.add('roc-flash');
-                subTitleText.innerHTML = "增進班級整潔，鍛鍊強健體魄！支援 LINE 通訊社群一鍵回報！";
-                
-                // Re-render config table input fields in Retro styles
-                renderAreaConfig();
-                
-                if (!latestResults.length) {
-                    drawPrompt.innerHTML = `【愛國愛家衛生第一】目前名單共 <strong>${students.length}</strong> 人，請點選按鈕隨機指派愛國勞動役。`;
-                    drawBtn.innerHTML = "開始指派勞動任務";
-                }
-            } else {
-                styleToggleBtn.innerHTML = "切換華國美學版";
-                titleText.innerHTML = "隨機掃地工作 2.0 (獨立安全版)";
-                titleText.classList.remove('roc-flash');
-                subTitleText.innerHTML = "完全複製 CK-Clean 所有功能 ─ 內建 Excel 一鍵匯入與 Vercel 隱私 LINE API 安全推送";
-                
-                renderAreaConfig();
-                
-                if (!latestResults.length) {
-                    drawPrompt.innerHTML = `準備就緒！目前名單共 <strong>${students.length}</strong> 人，點擊下方按鈕開始公平分派。`;
-                    drawBtn.innerHTML = "抽籤分配";
-                }
-            }
-
-            // If drawing result is already generated, re-render to reflect new styles
-            if (latestResults.length > 0) {
-                renderResults();
-                generateLineMessage();
-            }
-            updateHelpers();
-        }
 
         // Tab switcher
         function switchTab(tabName) {
@@ -2321,10 +2160,7 @@
                 });
             });
 
-            // Auto-trigger ROC mode style toggle if previously saved
-            if (localStorage.getItem('rocMode') === 'true') {
-                toggleStyle();
-            }
+
         };
     </script>
 </body>
