@@ -2055,10 +2055,14 @@
                         dbBadge.style.background = 'var(--success)';
                         dbBadge.style.color = 'white';
                         dbBadge.innerText = '已連接 Vercel KV (雲端儲存啟用)';
+                    } else if (data && data.hasEdgeConfig) {
+                        dbBadge.style.background = 'var(--success)';
+                        dbBadge.style.color = 'white';
+                        dbBadge.innerText = '已連接 Edge Config (雲端儲存啟用)';
                     } else {
                         dbBadge.style.background = 'rgba(239, 68, 68, 0.15)';
                         dbBadge.style.color = 'var(--danger)';
-                        dbBadge.innerText = '本機快取暫存模式 (無 Vercel KV)';
+                        dbBadge.innerText = '本機快取暫存模式 (無雲端資料庫)';
                     }
 
                     if (data && data.hasCloudConfig) {
