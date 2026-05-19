@@ -1014,6 +1014,51 @@
                         </div>
                     </div>
 
+                    <!-- 歷史抽籤與公平性追蹤卡片 -->
+                    <div class="card" id="historyCard" style="display: none;">
+                        <div class="card-title">
+                            <svg class="title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+                            歷史抽籤與公平性追蹤
+                        </div>
+                        <p class="muted" style="margin-bottom: 15px; font-size: 0.8rem;">
+                            系統會自動記錄每位同學的累計抽籤次數，並幫您找出「最久沒有被抽到」的同學。
+                        </p>
+                        
+                        <div style="margin-bottom: 15px; border-bottom: 1px solid var(--panel-border); padding-bottom: 15px;">
+                            <h4 style="font-size: 0.9rem; margin-bottom: 8px; color: var(--accent);">⏳ 最久未被抽到的同學 (優先建議)</h4>
+                            <div id="longestStandbyList" style="font-size: 0.85rem; line-height: 1.6; color: var(--text-primary);">
+                                載入名單中...
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <h4 style="font-size: 0.9rem; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                <span>📊 全班累計統計數據</span>
+                                <button class="btn-secondary" onclick="toggleHistoryDetails()" style="font-size: 0.75rem; padding: 2px 8px;" id="toggleHistDetailsBtn">展開細節</button>
+                            </h4>
+                            <div id="historyDetailsContainer" style="display: none; max-height: 250px; overflow-y: auto; border: 1px solid var(--panel-border); border-radius: 4px; padding: 8px;">
+                                <table id="historyStatsTable" style="width: 100%; font-size: 0.8rem;">
+                                    <thead>
+                                        <tr>
+                                            <th>座號</th>
+                                            <th>姓名</th>
+                                            <th>累計抽中</th>
+                                            <th>連續休息</th>
+                                            <th>最後抽中輪次</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Injected dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="actions-bar" style="margin-top: 15px; justify-content: flex-end;">
+                            <button class="btn-secondary" onclick="resetHistory()" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: rgba(239, 68, 68, 0.2); font-size: 0.75rem; padding: 4px 10px;">重設歷史統計</button>
+                        </div>
+                    </div>
+
                     <!-- Output Results Grid -->
                     <div id="resultsWrapper" style="display: none;">
                         <!-- Officers output table -->
@@ -1427,6 +1472,7 @@
             
             showToast(`成功匯入 ${students.length} 位學生名單！`);
             updateHelpers();
+            renderHistoryStats();
         }
 
         function loadStoredConfig() {
@@ -1447,6 +1493,7 @@
                 $("#drawBtn").disabled = false;
             }
             updateHelpers();
+            renderHistoryStats();
         }
 
         function updateHelpers() {
@@ -1538,6 +1585,9 @@
                 latestResults = areaObjs;
                 standby = shuffled.slice(ptr);
 
+                // 更新歷史抽籤統計與公平性追蹤
+                updateHistoryOnDraw(pool);
+
                 // Render UI results
                 renderResults();
                 generateLineMessage();
@@ -1616,6 +1666,172 @@
             resultsWrapper.classList.remove('roc-mode');
             document.querySelectorAll('#resultsWrapper .card').forEach(c => c.classList.remove('roc-mode'));
             document.querySelectorAll('#resultsWrapper table').forEach(t => t.classList.remove('roc-mode'));
+        }
+
+        /* ===== 歷史抽籤與公平性統計邏輯 ===== */
+        function renderHistoryStats() {
+            const historyCard = document.getElementById('historyCard');
+            if (students.length === 0) {
+                historyCard.style.display = 'none';
+                return;
+            }
+            historyCard.style.display = 'block';
+
+            // Get history stats
+            let studentHistory = JSON.parse(localStorage.getItem('clean_pick_student_history') || '{}');
+            let roundCounter = parseInt(localStorage.getItem('clean_pick_round_counter') || '0', 10);
+
+            // Synchronize and initialize if any students are missing from history
+            let updated = false;
+            students.forEach(s => {
+                const key = `${s.name}_${s.seat}`;
+                if (!studentHistory[key]) {
+                    studentHistory[key] = {
+                        name: s.name,
+                        seat: s.seat,
+                        drawCount: 0,
+                        standbyCount: 0,
+                        consecutiveStandby: 0,
+                        lastDrawnRound: 0
+                    };
+                    updated = true;
+                }
+            });
+            if (updated) {
+                localStorage.setItem('clean_pick_student_history', JSON.stringify(studentHistory));
+            }
+
+            // Convert to array and filter out students not currently in students list
+            const statsList = Object.values(studentHistory).filter(s => {
+                return students.some(cur => cur.name === s.name && cur.seat === s.seat);
+            });
+
+            // If round counter is 0, show a helpful message
+            if (roundCounter === 0) {
+                document.getElementById('longestStandbyList').innerHTML = `
+                    <div class="note" style="margin: 0; padding: 10px;">
+                        尚未進行本輪次抽籤，暫無歷史數據。請先上傳名冊並進行首次抽籤！
+                    </div>`;
+                document.getElementById('historyStatsTable').querySelector('tbody').innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 15px;">尚未進行任何抽籤</td>
+                    </tr>`;
+                return;
+            }
+
+            // Find top students who have been in standby the longest
+            // Sort: 1) consecutiveStandby desc, 2) lastDrawnRound asc, 3) drawCount asc
+            const sortedLongestStandby = [...statsList].sort((a, b) => {
+                if (b.consecutiveStandby !== a.consecutiveStandby) {
+                    return b.consecutiveStandby - a.consecutiveStandby;
+                }
+                if (a.lastDrawnRound !== b.lastDrawnRound) {
+                    return a.lastDrawnRound - b.lastDrawnRound;
+                }
+                return a.drawCount - b.drawCount;
+            });
+
+            // Build Top 5 Longest Standby HTML
+            let standbyHtml = '<div style="display:flex; flex-direction:column; gap:8px;">';
+            // Only select those with positive consecutiveStandby or never drawn, limit to top 5
+            const top5 = sortedLongestStandby.slice(0, 5);
+            top5.forEach((s, idx) => {
+                const medal = idx === 0 ? '👑 ' : '';
+                const lastRoundText = s.lastDrawnRound === 0 ? '從未被抽中' : `前 ${roundCounter - s.lastDrawnRound} 輪被抽中`;
+                standbyHtml += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 4px; border: 1px solid var(--panel-border);">
+                        <div>
+                            <strong>${medal}座號 ${s.seat} ${s.name}</strong>
+                        </div>
+                        <div style="font-size:0.8rem; color: var(--text-secondary);">
+                            連續休息 <span style="color:var(--accent); font-weight:bold;">${s.consecutiveStandby}</span> 輪｜累計抽中 <span style="font-weight:bold; color:var(--primary);">${s.drawCount}</span> 次 ｜ <span style="font-size:0.75rem;">(${lastRoundText})</span>
+                        </div>
+                    </div>`;
+            });
+            standbyHtml += '</div>';
+            document.getElementById('longestStandbyList').innerHTML = standbyHtml;
+
+            // Sort table stats by seat ascending
+            const sortedBySeat = [...statsList].sort((a, b) => a.seat - b.seat);
+            let tbodyHtml = '';
+            sortedBySeat.forEach(s => {
+                tbodyHtml += `
+                    <tr>
+                        <td>${s.seat}</td>
+                        <td><strong>${s.name}</strong></td>
+                        <td>${s.drawCount} 次</td>
+                        <td style="color:${s.consecutiveStandby > 0 ? 'var(--success)' : 'inherit'}">${s.consecutiveStandby} 輪</td>
+                        <td>${s.lastDrawnRound === 0 ? '從未被抽中' : `第 ${s.lastDrawnRound} 輪`}</td>
+                    </tr>`;
+            });
+            document.getElementById('historyStatsTable').querySelector('tbody').innerHTML = tbodyHtml;
+        }
+
+        function updateHistoryOnDraw(pool) {
+            let studentHistory = JSON.parse(localStorage.getItem('clean_pick_student_history') || '{}');
+            let roundCounter = parseInt(localStorage.getItem('clean_pick_round_counter') || '0', 10);
+            roundCounter += 1;
+            localStorage.setItem('clean_pick_round_counter', roundCounter);
+
+            // Create set of drawn student keys
+            const drawnSet = new Set();
+            latestResults.forEach(a => {
+                a.members.forEach(m => {
+                    drawnSet.add(`${m.name}_${m.seat}`);
+                });
+            });
+
+            // Initialize/Update stats for all pool members
+            pool.forEach(p => {
+                const key = `${p.name}_${p.seat}`;
+                if (!studentHistory[key]) {
+                    studentHistory[key] = {
+                        name: p.name,
+                        seat: p.seat,
+                        drawCount: 0,
+                        standbyCount: 0,
+                        consecutiveStandby: 0,
+                        lastDrawnRound: 0
+                    };
+                }
+
+                if (drawnSet.has(key)) {
+                    studentHistory[key].drawCount += 1;
+                    studentHistory[key].consecutiveStandby = 0;
+                    studentHistory[key].lastDrawnRound = roundCounter;
+                } else {
+                    studentHistory[key].standbyCount += 1;
+                    studentHistory[key].consecutiveStandby += 1;
+                }
+            });
+
+            localStorage.setItem('clean_pick_student_history', JSON.stringify(studentHistory));
+            renderHistoryStats();
+        }
+
+        // Toggle history details visibility
+        let showHistoryDetails = false;
+        function toggleHistoryDetails() {
+            showHistoryDetails = !showHistoryDetails;
+            const container = document.getElementById('historyDetailsContainer');
+            const btn = document.getElementById('toggleHistDetailsBtn');
+            if (showHistoryDetails) {
+                container.style.display = 'block';
+                btn.textContent = '收合細節';
+            } else {
+                container.style.display = 'none';
+                btn.textContent = '展開細節';
+            }
+        }
+
+        // Reset history stats
+        function resetHistory() {
+            if (confirm('確定要清除所有抽籤歷史與公平性統計數據嗎？此動作無法復原。')) {
+                localStorage.removeItem('clean_pick_student_history');
+                localStorage.setItem('clean_pick_round_counter', '0');
+                renderHistoryStats();
+                showToast('歷史統計數據已成功重設！', 'success');
+            }
         }
 
         /* ===== CSV 匯出邏輯 ===== */
