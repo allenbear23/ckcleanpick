@@ -79,9 +79,7 @@
             align-items: center;
             padding: 20px;
             overflow-x: hidden;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.12) 0px, transparent 50%);
+            background-image: none;
         }
 
         /* 華國美學 body 覆蓋 */
@@ -149,9 +147,7 @@
         .logo-area h1 {
             font-size: 1.8rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #60a5fa, #c084fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #ffffff;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -558,9 +554,21 @@
             font-family: "DFKai-SB", sans-serif;
         }
 
+        /* Custom Inline SVG Title Icons styling */
+        .title-icon {
+            margin-right: 8px;
+            vertical-align: middle;
+            color: var(--primary);
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .roc-mode .title-icon {
+            color: #ff0000;
+        }
+
         /* Buttons styling */
         .btn {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
+            background: var(--primary);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -878,23 +886,23 @@
     <div class="container" id="mainContainer">
         <!-- 華國跑馬燈公告欄 -->
         <div class="roc-ticker">
-            <marquee scrollamount="6">📢 溫馨提示：請各位值日生及掃地同學認真做好清潔工作，為班級爭取整潔秩序榮譽紅旗！愛護公物，人人有責！ 📢</marquee>
+            <marquee scrollamount="6">溫馨提示：請各位值日生及掃地同學認真做好清潔工作，為班級爭取整潔秩序榮譽紅旗！愛護公物，人人有責！</marquee>
         </div>
 
         <header id="headerSection">
             <div class="logo-area">
-                <h1 id="titleText">✨ 隨機掃地工作 2.0 (獨立安全版)</h1>
+                <h1 id="titleText">隨機掃地工作 2.0 (獨立安全版)</h1>
                 <p id="subTitleText">完全複製 CK-Clean 所有功能 ─ 內建 Excel 一鍵匯入與 Vercel 隱私 LINE API 安全推送</p>
             </div>
             <button class="style-toggle" onclick="toggleStyle()" id="styleToggleBtn">
-                🇹🇼 切換華國美學版
+                切換華國美學版
             </button>
         </header>
 
         <!-- Navigation Tabs -->
         <div class="tabs" id="tabsContainer">
-            <button class="tab-btn active" onclick="switchTab('lottery')" id="tabLotteryBtn">🔮 抽選分配主頁</button>
-            <button class="tab-btn" onclick="switchTab('line-config')" id="tabLineBtn">🔌 Vercel 後端狀態 & 推送測試</button>
+            <button class="tab-btn active" onclick="switchTab('lottery')" id="tabLotteryBtn">抽選分配主頁</button>
+            <button class="tab-btn" onclick="switchTab('line-config')" id="tabLineBtn">Vercel 後端狀態 & 推送測試</button>
         </div>
 
         <!-- Tab 1: Lottery Page (Full Single-page replicate of CK portal) -->
@@ -914,7 +922,7 @@
                     若中文顯示亂碼，程式會自動嘗試 Big5 編碼。本系統支援 <b>.xlsx, .xls</b> 班級 Excel 檔案直接拖曳，免轉檔！
                 </div>
                 <div class="note">
-                    💡 <b>Excel 格式小提示</b>：系統會自動抓取 Excel 的第一欄作為姓名名冊，自動過濾像「姓名/座號」等表頭。
+                    <b>Excel 格式小提示</b>：系統會自動抓取 Excel 的第一欄作為姓名名冊，自動過濾像「姓名/座號」等表頭。
                 </div>
                 <div class="muted" style="margin-top:8px;"><span id="globalErr" style="color:var(--danger); font-weight:bold;"></span></div>
             </div>
@@ -924,10 +932,13 @@
                 <div>
                     <!-- Upload card -->
                     <div class="card" id="uploadCard">
-                        <div class="card-title">📂 載入班級名單</div>
+                        <div class="card-title">
+                            <svg class="title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                            載入班級名單
+                        </div>
                         
                         <div class="excel-dropzone" id="excelDropzone" onclick="triggerExcelUpload()">
-                            <span style="font-size: 2.2rem;">📊</span>
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary); margin-bottom: 12px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                             <h4 style="font-weight: 700; font-size: 0.95rem;">匯入 CSV、TXT 或 Excel 班級名單</h4>
                             <p>將檔案拖曳至此，或點擊此區域選取</p>
                             <p style="font-size: 0.75rem; opacity: 0.8; color: var(--primary);">支援 UTF-8、Big5 CSV 與 Excel 工作表</p>
@@ -938,7 +949,10 @@
 
                     <!-- Date & Officer controls -->
                     <div class="card" id="controlsCard">
-                        <div class="card-title">📅 適用日期與幹部座號設定</div>
+                        <div class="card-title">
+                            <svg class="title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            適用日期與幹部座號設定
+                        </div>
                         
                         <div class="controls-strip" style="border-bottom:1px solid var(--panel-border); padding-bottom:15px; margin-bottom:15px;">
                             <strong>掃地工作適用日期：</strong>
@@ -972,7 +986,10 @@
 
                     <!-- Config Sweep Areas -->
                     <div class="card" id="configCard">
-                        <div class="card-title">🧹 掃區項目設定（抽籤前可調整）</div>
+                        <div class="card-title">
+                            <svg class="title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                            掃區項目設定（抽籤前可調整）
+                        </div>
                         <table id="areasConfig">
                             <thead>
                                 <tr>
@@ -986,8 +1003,8 @@
                             </tbody>
                         </table>
                         <div class="actions-bar" style="margin-top:10px;">
-                            <button id="addAreaBtn" class="btn-secondary" onclick="addAreaRow()">➕ 新增項目</button>
-                            <button id="resetAreaBtn" class="btn-secondary" onclick="resetAreaRows()">🔄 恢復預設</button>
+                            <button id="addAreaBtn" class="btn-secondary" onclick="addAreaRow()">新增項目</button>
+                            <button id="resetAreaBtn" class="btn-secondary" onclick="resetAreaRows()">恢復預設</button>
                         </div>
                     </div>
                 </div>
@@ -996,21 +1013,24 @@
                 <div>
                     <!-- Active drawing card -->
                     <div class="card" id="drawCard">
-                        <div class="card-title">🔮 抽選控制台</div>
+                        <div class="card-title">
+                            <svg class="title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3zM6 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3z"/></svg>
+                            抽選控制台
+                        </div>
                         
                         <div class="draw-container" id="drawArea">
                             <p id="drawPrompt" style="font-size: 1.05rem;">請先上傳班級名冊檔案以開始抽籤</p>
-                            <button class="btn" id="drawBtn" disabled onclick="performDraw()" style="margin-top:15px; font-size:1.1rem; width:100%;">⚡ 抽籤分配</button>
+                            <button class="btn" id="drawBtn" disabled onclick="performDraw()" style="margin-top:15px; font-size:1.1rem; width:100%;">抽籤分配</button>
                         </div>
 
                         <div class="actions-bar">
-                            <button id="reshuffleBtn" class="btn-secondary" disabled onclick="performDraw()" style="flex:1;">🔄 重新抽籤</button>
-                            <button id="csvBtn" class="btn-secondary" disabled onclick="downloadCsv()" style="flex:1;">💾 下載 CSV</button>
+                            <button id="reshuffleBtn" class="btn-secondary" disabled onclick="performDraw()" style="flex:1;">重新抽籤</button>
+                            <button id="csvBtn" class="btn-secondary" disabled onclick="downloadCsv()" style="flex:1;">下載 CSV</button>
                         </div>
                         
                         <div class="actions-bar" id="postDrawActions" style="display:none; flex-direction:column; gap:10px;">
                             <div id="lotteryPasswordContainer" style="display:none; margin-bottom: 5px; text-align: left;">
-                                <label for="lotteryPasswordInput" style="font-size:0.8rem; margin-bottom:4px; display:block;">🔐 衛生股長授權密碼：</label>
+                                <label for="lotteryPasswordInput" style="font-size:0.8rem; margin-bottom:4px; display:block;">衛生股長授權密碼：</label>
                                 <input type="password" id="lotteryPasswordInput" placeholder="請輸入授權密碼..." style="width:100%; padding:10px; font-size:0.9rem;" onchange="syncLotteryPassword()">
                             </div>
                             <button class="btn-line" onclick="shareToLine()" style="width:100%;">
@@ -1020,7 +1040,7 @@
                                 一鍵分享到 LINE (免設定)
                             </button>
                             <button class="btn" style="background: #10b981; border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); width:100%; display:none;" onclick="sendToLineVercel()" id="vercelPushBtn">
-                                🚀 安全推送至 LINE 群組
+                                安全推送至 LINE 群組
                             </button>
                         </div>
                     </div>
@@ -1029,7 +1049,10 @@
                     <div id="resultsWrapper" style="display: none;">
                         <!-- Officers output table -->
                         <div class="card" id="rolesCard">
-                            <div class="card-title">👥 幹部名冊</div>
+                            <div class="card-title">
+                                <svg class="title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                幹部名冊
+                            </div>
                             <table id="rolesTable">
                                 <thead>
                                     <tr>
@@ -1045,7 +1068,10 @@
 
                         <!-- Sweep assignment output table -->
                         <div class="card" id="areasCard">
-                            <div class="card-title">📋 掃區分配名單</div>
+                            <div class="card-title">
+                                <svg class="title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+                                掃區分配名單
+                            </div>
                             <table id="areasTable">
                                 <thead>
                                     <tr>
@@ -1062,12 +1088,18 @@
                         <!-- Standby and notes grid -->
                         <div class="grid-2" style="grid-template-columns: 1fr 1fr; gap:15px; margin-bottom: 22px;">
                             <div class="card" id="standbyCard" style="margin-bottom:0;">
-                                <div class="card-title">🛏️ 候補名單（本週未分配）</div>
+                                <div class="card-title">
+                                    <svg class="title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>
+                                    候補名單（本週未分配）
+                                </div>
                                 <div id="standbyBox" class="standby-box">—</div>
                             </div>
                             
                             <div class="card" id="notesCard" style="margin-bottom:0;">
-                                <div class="card-title">📝 備註事項</div>
+                                <div class="card-title">
+                                    <svg class="title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                                    備註事項
+                                </div>
                                 <ul>
                                     <li>請任何假需找代理人。</li>
                                     <li><b>原則上</b>每週由衛生股長抽新名單，<b>公告於班群</b>。</li>
@@ -1077,9 +1109,12 @@
 
                         <!-- LINE Text Message Preview card -->
                         <div class="card" id="previewCard">
-                            <div class="card-title">📱 LINE 訊息推送文字預覽</div>
+                            <div class="card-title">
+                                <svg class="title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                LINE 訊息推送文字預覽
+                            </div>
                             <div class="text-preview" id="textMessagePreview"></div>
-                            <button class="btn-secondary" onclick="copyResultText()">📋 複製預覽純文字</button>
+                            <button class="btn-secondary" onclick="copyResultText()">複製預覽純文字</button>
                         </div>
                     </div>
                 </div>
@@ -1089,27 +1124,30 @@
         <!-- Tab 2: LINE Vercel Environment variables -->
         <div id="line-config-tab" class="view-section">
             <div class="card">
-                <div class="card-title">🛡️ Vercel 後端安全推送狀態與測試</div>
+                <div class="card-title">
+                    <svg class="title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Vercel 後端安全推送狀態與測試
+                </div>
                 <p style="font-size: 0.95rem; margin-bottom: 20px; line-height: 1.6; color: var(--text-secondary);">
-                    此為<b>安全獨立部署版</b>。所有的 LINE API 憑證 (Access Token) 與預設群組 ID 都以<strong>環境變數</strong>的安全格式存放在 Vercel 雲端伺服器中。網頁前端將不再洩漏任何私密金鑰，且完全避開了瀏覽器的跨網域 (CORS) 限制！
+                    此為<b>安全獨立部署版</b>。所有的 LINE API 憑證 (Access Token) 與預設群組 ID 都以<strong>環境變數</strong>的安全格式存放在 Vercel 雲端伺服器中。網頁前端將不再洩漏 any 私密金鑰，且完全避開了瀏覽器的跨網域 (CORS) 限制！
                 </p>
 
                 <!-- Status Badge loaded from /api/push securely -->
                 <div style="margin-bottom: 25px;">
-                    <label>☁️ Vercel 後端環境變數狀態：</label>
+                    <label>Vercel 後端環境變數狀態：</label>
                     <div id="lineConnectionStatus" class="status-badge disconnected">
-                        🔍 正在向 Vercel 伺服器探測狀態...
+                        正在向 Vercel 伺服器探測狀態...
                     </div>
                 </div>
 
-                <div class="card" style="background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05);">
-                    <div class="card-title" style="font-size: 0.95rem;">💡 如何在 Vercel 儀表板中設定金鑰？</div>
+                <div class="card" style="background: #f8f9fa; border: 1px solid #dee2e6;">
+                    <div class="card-title" style="font-size: 0.95rem;">如何在 Vercel 儀表板中設定金鑰？</div>
                     <div style="font-size: 0.9rem; line-height: 1.6; color:var(--text-secondary);">
                         請前往您的 <a href="https://vercel.com" target="_blank" style="color: var(--primary); font-weight: bold; text-decoration: underline;">Vercel Dashboard</a>，進入該專案的 **Settings ➔ Environment Variables** 頁面，並添加以下三項環境變數：
                         <ul style="margin-left: 20px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
-                            <li>🔑 <strong><code>LINE_CHANNEL_ACCESS_TOKEN</code></strong>：填入您在 LINE Developers 申請到的 Bot 頻道存取權權限憑證。</li>
-                            <li>💬 <strong><code>LINE_GROUP_ID</code></strong>：填入您希望推送訊息的 LINE 目標群組 ID。</li>
-                            <li>🔐 <strong><code>PUSH_PASSWORD</code></strong>：(選填) 設定此環境變數可開啟「推送防護機制」，要求輸入正確的授權密碼方能送出。</li>
+                            <li><strong><code>LINE_CHANNEL_ACCESS_TOKEN</code></strong>：填入您在 LINE Developers 申請到的 Bot 頻道存取權權限憑證。</li>
+                            <li><strong><code>LINE_GROUP_ID</code></strong>：填入您希望推送訊息的 LINE 目標群組 ID。</li>
+                            <li><strong><code>PUSH_PASSWORD</code></strong>：(選填) 設定此環境變數可開啟「推送防護機制」，要求輸入正確的授權密碼方能送出。</li>
                         </ul>
                     </div>
                 </div>
@@ -1147,7 +1185,7 @@
 
     <!-- Toast Component -->
     <div id="toast" class="toast">
-        <span id="toastIcon">✅</span>
+        <span id="toastIcon"></span>
         <span id="toastMessage">成功匯入名單！</span>
     </div>
 
@@ -1234,20 +1272,20 @@
         function addAreaRow() {
             areaDefs.push({ name: "新掃區項目", capacity: 1 });
             renderAreaConfig();
-            showToast('➕ 已新增一個空掃地項目！');
+            showToast('已新增一個空掃地項目！');
         }
 
         function deleteAreaRow(idx) {
             areaDefs.splice(idx, 1);
             renderAreaConfig();
-            showToast('🗑️ 已刪除該項目！');
+            showToast('已刪除該項目！');
         }
 
         function resetAreaRows() {
             if (confirm('確定要將掃區配置恢復成初始預設值嗎？')) {
                 areaDefs = JSON.parse(JSON.stringify(DEFAULT_AREAS));
                 renderAreaConfig();
-                showToast('🔄 掃區項目已重置！');
+                showToast('掃區項目已重置！');
             }
         }
 
@@ -1344,7 +1382,7 @@
                         const parsed = parseStudentsFromText(csvText);
                         
                         if (parsed.list.length === 0) {
-                            $("#status").textContent = "❌ 解析 Excel 失敗：工作表內容為空。";
+                            $("#status").textContent = "解析 Excel 失敗：工作表內容為空。";
                             $("#status").style.color = "var(--danger)";
                             return;
                         }
@@ -1352,7 +1390,7 @@
                         finalizeStudentsLoad(parsed);
                     } catch (error) {
                         console.error(error);
-                        $("#status").textContent = "❌ 解析 Excel 檔案錯誤，請確保格式正常。";
+                        $("#status").textContent = "解析 Excel 檔案錯誤，請確保格式正常。";
                         $("#status").style.color = "var(--danger)";
                     }
                 };
@@ -1382,7 +1420,7 @@
 
                     let finalContent = "";
                     if (useBig5) {
-                        $("#status").textContent = "⚠️ 偵測到 UTF-8 亂碼，改以 Big5 編碼重讀中...";
+                        $("#status").textContent = "偵測到 UTF-8 亂碼，改以 Big5 編碼重讀中...";
                         try {
                             finalContent = await tryReadFile('Big5');
                         } catch (big5Err) {
@@ -1397,7 +1435,7 @@
                     finalizeStudentsLoad(parsed);
                 } catch (err) {
                     console.error(err);
-                    $("#status").textContent = "❌ 檔案讀取失敗。";
+                    $("#status").textContent = "檔案讀取失敗。";
                     $("#status").style.color = "var(--danger)";
                 }
             }
@@ -1406,7 +1444,7 @@
         function finalizeStudentsLoad(parsed) {
             students = parsed.list;
             if (students.length === 0) {
-                $("#status").textContent = "❌ 名單內沒有包含有效的學生姓名。";
+                $("#status").textContent = "名單內沒有包含有效的學生姓名。";
                 $("#status").style.color = "var(--danger)";
                 return;
             }
@@ -1415,15 +1453,15 @@
             localStorage.setItem('clean_roster_students', JSON.stringify(students));
 
             $("#status").textContent = parsed.dupSeats?.length
-                ? `✅ 已載入 ${students.length} 人名冊！(重複座號: ${parsed.dupSeats.join('、')})`
-                : `✅ 已載入 ${students.length} 人名冊！隨時可開始抽籤。`;
+                ? `已載入 ${students.length} 人名冊！(重複座號: ${parsed.dupSeats.join('、')})`
+                : `已載入 ${students.length} 人名冊！隨時可開始抽籤。`;
             $("#status").style.color = "var(--success)";
 
             $("#drawBtn").disabled = false;
             $("#reshuffleBtn").disabled = true;
             $("#csvBtn").disabled = true;
             
-            showToast(`👥 成功匯入 ${students.length} 位學生名單！`);
+            showToast(`成功匯入 ${students.length} 位學生名單！`);
             updateHelpers();
         }
 
@@ -1431,7 +1469,7 @@
             const stored = localStorage.getItem('clean_roster_students');
             if (stored) {
                 students = JSON.parse(stored);
-                $("#status").textContent = `✅ 已載入快取的 ${students.length} 人名單，可直接抽籤。`;
+                $("#status").textContent = `已載入快取的 ${students.length} 人名單，可直接抽籤。`;
                 $("#status").style.color = "var(--success)";
                 $("#drawBtn").disabled = false;
             } else {
@@ -1441,7 +1479,7 @@
                     name: ["張小明", "李小華", "王大同", "陳美美", "林小龍", "劉阿土", "趙子龍", "關小羽", "張小飛", "黃小忠", "馬小超", "魏小延", "姜小維", "諸葛亮", "司馬懿"][i]
                 }));
                 localStorage.setItem('clean_roster_students', JSON.stringify(students));
-                $("#status").textContent = `💡 已預填 ${students.length} 位預設名單提供直接測試。`;
+                $("#status").textContent = `已預填 ${students.length} 位預設名單提供直接測試。`;
                 $("#drawBtn").disabled = false;
             }
             updateHelpers();
@@ -1459,37 +1497,35 @@
         /* ===== 抽籤核心邏輯 (幹部過濾、名額配置) ===== */
         function performDraw() {
             if (students.length === 0) {
-                showToast('❌ 請先上傳或選擇名單！', 'error');
+                showToast('請先上傳或選擇名單！', 'error');
                 return;
             }
 
             const defs = getAreaDefsFromUI();
             if (defs.length === 0) {
-                showToast('❌ 請至少新增一個掃區項目且名額大於 0！', 'error');
+                showToast('請至少新增一個掃區項目且名額大於 0！', 'error');
                 return;
             }
 
             // Animation Phase
             const drawArea = document.getElementById('drawArea');
             drawArea.innerHTML = `
-                <div class="shuffle-animation" id="shuffler">🔄 系統隨機配置中...</div>
+                <div class="shuffle-animation" id="shuffler">系統隨機配置中...</div>
                 <p class="muted">正在進行公平工作分派，請稍後...</p>
             `;
 
             if (isRocMode) {
-                document.getElementById('shuffler').innerHTML = "🇹🇼 分配愛國自治青年勞動役中... 🇹🇼";
+                document.getElementById('shuffler').innerHTML = "分配愛國自治青年勞動役中...";
             }
 
-            const mockNames = ["張小明", "諸葛亮", "趙子龍", "關小羽", "陳美美"];
+            const nameList = students.map(s => s.name);
             let animCount = 0;
             const interval = setInterval(() => {
-                const name = mockNames[Math.floor(Math.random() * mockNames.length)];
+                const name = nameList[Math.floor(Math.random() * nameList.length)];
                 const area = defs[Math.floor(Math.random() * defs.length)].name;
                 const shuffler = document.getElementById('shuffler');
                 if (shuffler) {
-                    shuffler.innerHTML = isRocMode
-                        ? `🇹🇼 ${name} ⚔️ ${area} 🇹🇼`
-                        : `🔄 ${name} ➔ ${area}`;
+                    shuffler.innerHTML = `${name} 指派至 ${area}`;
                 }
                 animCount++;
                 if (animCount > 12) {
@@ -1554,14 +1590,14 @@
                     colors: isRocMode ? ['#ff0000', '#0000ff', '#ffffff', '#ffff00'] : ['#3b82f6', '#8b5cf6', '#10b981']
                 });
 
-                showToast('🎉 分派完成！結果已呈現在下方表格。');
+                showToast('分派完成！結果已呈現在下方表格。');
 
                 // Enable buttons
                 $("#reshuffleBtn").disabled = false;
                 $("#csvBtn").disabled = false;
             } catch (err) {
                 document.getElementById('globalErr').textContent = err.message;
-                showToast('❌ 抽籤失敗：' + err.message, 'error');
+                showToast('抽籤失敗：' + err.message, 'error');
                 
                 // Restore Draw Prompt UI
                 updateHelpers();
@@ -1577,12 +1613,11 @@
                 <div class="roc-flash" style="font-size: 3.2rem; font-weight:900; margin-bottom: 10px; font-family:'DFKai-SB'; text-shadow:2px 2px 0px #000000;">大 功 告 成</div>
                 <h2 style="font-weight: 900; font-size: 1.6rem; margin-bottom: 8px; font-family:'DFKai-SB'; color: #000080;">班級勞動役指派完畢！</h2>
                 <p style="color: #ff0000; font-weight: bold; margin-bottom: 20px;">請各位愛國青年遵照指示辦理，為班級爭取榮譽！</p>
-                <button class="btn-secondary" onclick="performDraw()">🔄 重新指派工作</button>
+                <button class="btn-secondary" onclick="performDraw()">重新指派工作</button>
             ` : `
-                <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
                 <h2 style="font-weight: 800; font-size: 1.4rem; margin-bottom: 6px;">工作分配完成！</h2>
                 <p style="color: var(--text-secondary); margin-bottom: 20px;">名冊與 LINE 訊息已同步生成，請查看下方報表。</p>
-                <button class="btn-secondary" onclick="performDraw()">🔄 重新抽籤</button>
+                <button class="btn-secondary" onclick="performDraw()">重新抽籤</button>
             `;
 
             // 1. Render Officers (rolesTable)
@@ -1687,7 +1722,7 @@
                     throw new Error("Popup blocked");
                 }
             } catch (e) {
-                $('#globalErr').textContent = '⚠️ 下載失敗，彈出視窗可能被瀏覽器阻擋。請允許本站彈出視窗後再試。';
+                $('#globalErr').textContent = '下載失敗，彈出視窗可能被瀏覽器阻擋。請允許本站彈出視窗後再試。';
                 let textarea = document.getElementById('csv-fallback');
                 if (!textarea) {
                     textarea = document.createElement('textarea');
@@ -1717,45 +1752,45 @@
             
             let msg = "";
             if (isRocMode) {
-                msg = `🇹🇼 【班級自治整潔勞動派遣令】 🇹🇼\n`;
-                msg += `📅 派遣日期：${dateStr}\n`;
-                msg += `📆 適用日期：${dateLabel}\n`;
+                msg = `【班級自治整潔勞動派遣令】\n`;
+                msg += `派遣日期：${dateStr}\n`;
+                msg += `適用日期：${dateLabel}\n`;
                 msg += `============================\n`;
-                msg += `👥 幹部幹事名冊：\n`;
+                msg += `幹部幹事名冊：\n`;
                 msg += ` ∙ 衛生股長：${roles.hygieneLead ? labelSN(roles.hygieneLead) : "（無）"}\n`;
                 msg += ` ∙ 環保股長：${roles.envLead ? labelSN(roles.envLead) : "（無）"}\n`;
                 msg += ` ∙ 衛生幹事：${roles.hygieneOfficer ? labelSN(roles.hygieneOfficer) : "（無）"}\n`;
                 msg += `============================\n`;
-                msg += `📋 勞動服務工作配置：\n`;
+                msg += `勞動服務工作配置：\n`;
                 latestResults.forEach((a, i) => {
                     const mList = a.members.map(m => labelSN(m)).join('、');
                     msg += ` ${i + 1}. ${a.name} (名額:${a.cap}) ➔ 【 ${mList || '缺員'} 】\n`;
                 });
                 msg += `============================\n`;
-                msg += `💤 候補愛國自治青年：\n`;
+                msg += `候補愛國自治青年：\n`;
                 msg += ` ${standby.map(m => labelSN(m)).join('、') || '（無）'}\n`;
                 msg += `============================\n`;
-                msg += `📢 責任榮譽！請全體受派遣同學準時報到清潔負責區域，為班級爭取最高整潔秩序榮譽！ 🧹✨`;
+                msg += `責任榮譽！請全體受派遣同學準時報到清潔負責區域，為班級爭取最高整潔秩序榮譽！`;
             } else {
-                msg = `🧹 今日隨機掃地工作分配名單 🧹\n`;
-                msg += `📅 抽選日期：${dateStr}\n`;
-                msg += `📆 適用日期：${dateLabel}\n`;
+                msg = `今日隨機掃地工作分配名單\n`;
+                msg += `抽選日期：${dateStr}\n`;
+                msg += `適用日期：${dateLabel}\n`;
                 msg += `====================\n`;
-                msg += `👥 幹部職務：\n`;
+                msg += `幹部職務：\n`;
                 msg += ` ∙ 衛生股長：${roles.hygieneLead ? labelSN(roles.hygieneLead) : "（無）"}\n`;
                 msg += ` ∙ 環保股長：${roles.envLead ? labelSN(roles.envLead) : "（無）"}\n`;
                 msg += ` ∙ 衛生幹事：${roles.hygieneOfficer ? labelSN(roles.hygieneOfficer) : "（無）"}\n`;
                 msg += `====================\n`;
-                msg += `📋 掃區分配結果：\n`;
+                msg += `掃區分配結果：\n`;
                 latestResults.forEach((a, i) => {
                     const mList = a.members.map(m => labelSN(m)).join('、');
                     msg += ` ${i + 1}. ${a.name} ： ${mList || '缺員'}\n`;
                 });
                 msg += `====================\n`;
-                msg += `💤 候補名單（今日休息）：\n`;
+                msg += `候補名單（今日休息）：\n`;
                 msg += ` ${standby.map(m => labelSN(m)).join('、') || '（無）'}\n`;
                 msg += `====================\n`;
-                msg += `大家辛苦了！放學後請將負責區域清理乾淨，謝謝合作！💪✨`;
+                msg += `大家辛苦了！放學後請將負責區域清理乾淨，謝謝合作！`;
             }
 
             lineMessageText = msg;
@@ -1772,7 +1807,7 @@
         function copyResultText() {
             if (!lineMessageText) return;
             navigator.clipboard.writeText(lineMessageText)
-                .then(() => showToast('📋 已複製結果純文字！'))
+                .then(() => showToast('已複製結果純文字！'))
                 .catch(() => showToast('複製失敗，請手動選取文字複製。', 'error'));
         }
 
@@ -1795,7 +1830,7 @@
                 .then(data => {
                     if (data && data.allConfigured) {
                         badge.className = 'status-badge connected';
-                        badge.innerText = '✅ Vercel 後端金鑰配置完成 (自動推送功能已啟用)';
+                        badge.innerText = 'Vercel 後端金鑰配置完成 (自動推送功能已啟用)';
                         pushBtn.style.display = 'inline-flex';
                         envConfigured = true;
                     } else {
@@ -1804,7 +1839,7 @@
                         if (!data.groupConfigured) missing.push('LINE_GROUP_ID');
                         
                         badge.className = 'status-badge disconnected';
-                        badge.innerText = `⚠️ Vercel 金鑰尚未配置完全，遺失變數：[${missing.join(', ')}]`;
+                        badge.innerText = `Vercel 金鑰尚未配置完全，遺失變數：[${missing.join(', ')}]`;
                         pushBtn.style.display = 'none';
                         envConfigured = false;
                     }
@@ -1821,7 +1856,7 @@
                 .catch(err => {
                     console.warn('Unable to query local /api/push. It is normal if running in a simple static server (e.g. without Vercel CLI).', err);
                     badge.className = 'status-badge disconnected';
-                    badge.innerText = '❌ 無法連線至 Vercel API (若為本機靜態伺服器請先使用一鍵分享，部署至 Vercel 後即自動啟用！)';
+                    badge.innerText = '無法連線至 Vercel API (若為本機靜態伺服器請先使用一鍵分享，部署至 Vercel 後即自動啟用！)';
                     pushBtn.style.display = 'none';
                     envConfigured = false;
                     configPwdContainer.style.display = 'none';
@@ -1834,7 +1869,7 @@
             localStorage.setItem('clean_push_password', pwd);
             const lotteryPwd = document.getElementById('lotteryPasswordInput');
             if (lotteryPwd) lotteryPwd.value = pwd;
-            showToast('🔐 密碼已儲存！');
+            showToast('密碼已儲存！');
         }
 
         function syncLotteryPassword() {
@@ -1882,7 +1917,7 @@
 
             bubbleContents.push({
                 type: "text",
-                text: "👥 班級衛生幹部",
+                text: "班級衛生幹部",
                 weight: "bold",
                 size: "sm",
                 color: "#3b82f6"
@@ -1930,7 +1965,7 @@
 
             bubbleContents.push({
                 type: "text",
-                text: "📋 掃區分配名單",
+                text: "掃區分配名單",
                 weight: "bold",
                 size: "sm",
                 color: "#8b5cf6",
@@ -1950,7 +1985,7 @@
             const standbyStr = standby.map(m => `${pad2(m.seat)} ${m.name}`).join("、");
             bubbleContents.push({
                 type: "text",
-                text: "💤 候補名單（本日休息）",
+                text: "候補名單（本日休息）",
                 weight: "bold",
                 size: "sm",
                 color: "#f59e0b",
@@ -1968,7 +2003,7 @@
             // Build full Bubble payload
             const payload = {
                 type: "flex",
-                altText: `🧹 掃地工作分配結果已出爐！適用日期：${dateLabel}`,
+                altText: `掃地工作分配結果已出爐！適用日期：${dateLabel}`,
                 contents: {
                   type: "bubble",
                   styles: {
@@ -1990,14 +2025,14 @@
                     contents: [
                       {
                         type: "text",
-                        text: isRocMode ? "🇹🇼 班級自治整潔勞動派遣令 🇹🇼" : "🧹 班級掃地工作分配",
+                        text: isRocMode ? "班級自治整潔勞動派遣令" : "班級掃地工作分配",
                         weight: "bold",
                         size: "md",
                         color: isRocMode ? "#facc15" : "#ffffff"
                       },
                       {
                         type: "text",
-                        text: `📅 適用日期：${dateLabel}`,
+                        text: `適用日期：${dateLabel}`,
                         size: "xs",
                         color: "#9ca3af",
                         margin: "xs"
@@ -2016,8 +2051,8 @@
                       {
                         type: "text",
                         text: isRocMode 
-                            ? "📢 責任榮譽！請準時清潔，爭取整潔秩序榮譽紅旗！" 
-                            : "大家辛苦了！放學後請將負責區域清理乾淨！💪✨",
+                            ? "責任榮譽！請準時清潔，爭取整潔秩序榮譽紅旗！" 
+                            : "大家辛苦了！放學後請將負責區域清理乾淨！",
                         size: "xxs",
                         color: "#9ca3af",
                         align: "center",
@@ -2057,26 +2092,26 @@
             .then(async res => {
                 const data = await res.json();
                 if (res.ok) {
-                    showToast('🚀 成功在背景自動推送至 LINE 班級群組！');
+                    showToast('成功在背景自動推送至 LINE 班級群組！');
                 } else {
-                    showToast(`❌ 推送失敗: ${data.error || '未知錯誤'}`, 'error');
+                    showToast(`推送失敗: ${data.error || '未知錯誤'}`, 'error');
                 }
                 pushBtn.disabled = false;
-                pushBtn.innerHTML = '🚀 安全推送至 LINE 群組';
+                pushBtn.innerHTML = '安全推送至 LINE 群組';
             })
             .catch(err => {
-                showToast('❌ 無法與 Vercel 後端 API 通訊，請確認網路或環境變數。', 'error');
+                showToast('無法與 Vercel 後端 API 通訊，請確認網路或環境變數。', 'error');
                 pushBtn.disabled = false;
-                pushBtn.innerHTML = '🚀 安全推送至 LINE 群組';
+                pushBtn.innerHTML = '安全推送至 LINE 群組';
             });
         }
 
         function testVercelPush() {
             const localGroupId = localStorage.getItem('clean_local_group_id');
             const savedPassword = localStorage.getItem('clean_push_password') || '';
-            const testMsg = `🧪 隨機掃地工作系統 (Vercel Standalone) 串接測試成功！\n測試時間：${new Date().toLocaleString()}`;
+            const testMsg = `隨機掃地工作系統 (Vercel Standalone) 串接測試成功！\n測試時間：${new Date().toLocaleString()}`;
             
-            showToast('⏳ 正在傳送測試信號...', 'success');
+            showToast('正在傳送測試信號...', 'success');
 
             fetch('/api/push', {
                 method: 'POST',
@@ -2092,20 +2127,20 @@
             .then(async res => {
                 const data = await res.json();
                 if (res.ok) {
-                    alert('🎉 測試成功！您的 LINE 群組應已成功收到測試推送訊息。');
+                    alert('測試成功！您的 LINE 群組應已成功收到測試推送訊息。');
                 } else {
-                    alert(`❌ 測試發送失敗：${data.error}\n\n詳細資訊：${JSON.stringify(data.details)}`);
+                    alert(`測試發送失敗：${data.error}\n\n詳細資訊：${JSON.stringify(data.details)}`);
                 }
             })
             .catch(err => {
-                alert('❌ 伺服器通訊出錯，請確認 Vercel 部署正常運作中！\n錯誤：' + err.message);
+                alert('伺服器通訊出錯，請確認 Vercel 部署正常運作中！\n錯誤：' + err.message);
             });
         }
 
         function saveLocalGroupId() {
             const localGroupId = document.getElementById('localGroupIdInput').value.trim();
             localStorage.setItem('clean_local_group_id', localGroupId);
-            showToast('💾 覆蓋群組 ID 儲存成功！');
+            showToast('覆蓋群組 ID 儲存成功！');
         }
 
         /* ===== UI 與切換風格邏輯 (雙美學) ===== */
@@ -2160,8 +2195,8 @@
             const drawBtn = document.getElementById('drawBtn');
 
             if (isRocMode) {
-                styleToggleBtn.innerHTML = "✨ 切換極簡現代版";
-                titleText.innerHTML = "🇹🇼 青年建功立業 隨機掃除分派作業系統 🇹🇼";
+                styleToggleBtn.innerHTML = "切換極簡現代版";
+                titleText.innerHTML = "青年建功立業 隨機掃除分派作業系統";
                 titleText.classList.add('roc-flash');
                 subTitleText.innerHTML = "增進班級整潔，鍛鍊強健體魄！支援 LINE 通訊社群一鍵回報！";
                 
@@ -2170,11 +2205,11 @@
                 
                 if (!latestResults.length) {
                     drawPrompt.innerHTML = `【愛國愛家衛生第一】目前名單共 <strong>${students.length}</strong> 人，請點選按鈕隨機指派愛國勞動役。`;
-                    drawBtn.innerHTML = "⚡ 開始指派勞動任務";
+                    drawBtn.innerHTML = "開始指派勞動任務";
                 }
             } else {
-                styleToggleBtn.innerHTML = "🇹🇼 切換華國美學版";
-                titleText.innerHTML = "✨ 隨機掃地工作 2.0 (獨立安全版)";
+                styleToggleBtn.innerHTML = "切換華國美學版";
+                titleText.innerHTML = "隨機掃地工作 2.0 (獨立安全版)";
                 titleText.classList.remove('roc-flash');
                 subTitleText.innerHTML = "完全複製 CK-Clean 所有功能 ─ 內建 Excel 一鍵匯入與 Vercel 隱私 LINE API 安全推送";
                 
@@ -2182,7 +2217,7 @@
                 
                 if (!latestResults.length) {
                     drawPrompt.innerHTML = `準備就緒！目前名單共 <strong>${students.length}</strong> 人，點擊下方按鈕開始公平分派。`;
-                    drawBtn.innerHTML = "⚡ 抽籤分配";
+                    drawBtn.innerHTML = "抽籤分配";
                 }
             }
 
@@ -2218,10 +2253,10 @@
             toastMessage.innerText = message;
             if (type === 'success') {
                 toast.style.background = 'var(--success)';
-                toastIcon.innerText = '✅';
+                toastIcon.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: #ffffff; margin-right: 8px; vertical-align: middle;"><path d="M20 6L9 17l-5-5"/></svg>`;
             } else {
                 toast.style.background = 'var(--danger)';
-                toastIcon.innerText = '🚨';
+                toastIcon.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: #ffffff; margin-right: 8px; vertical-align: middle;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
             }
 
             toast.classList.add('show');
