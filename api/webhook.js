@@ -136,26 +136,42 @@ module.exports = async (req, res) => {
   }
 
   try {
+    console.log('=== Incoming Webhook Request ===');
+    console.log('Method:', req.method);
+    console.log('KV Configured:', hasKV);
+    console.log('Payload Body:', JSON.stringify(req.body));
+
     const { events } = req.body;
 
     // Handle LINE verification check
     if (!events || events.length === 0) {
+      console.log('Empty events payload received (LINE verification or keepalive).');
       return res.status(200).json({ status: 'ok', message: 'No events found.' });
     }
 
     const calendar = await getKV('clean_class_calendar') || [];
+    console.log('Existing calendar event count in Vercel KV:', calendar.length);
+
+    let parsedEventsCount = 0;
 
     for (const event of events) {
+      console.log('Processing Event:', JSON.stringify(event));
+      
       // We only care about message events of type text
       if (event.type === 'message' && event.message.type === 'text') {
         const text = event.message.text.trim();
+        console.log(`Extracted Message Text: "${text}"`);
 
-        // Check if message is a cadre reminder (trigger keywords: 幹部提醒, #提醒, 📝提醒, 📌提醒)
-        const isReminder = text.startsWith('幹部提醒') || 
+        // Check if message is a cadre reminder (trigger keywords anywhere in text)
+        const isReminder = text.includes('幹部提醒') || 
                            text.includes('#提醒') || 
-                           text.startsWith('考試:') || 
-                           text.startsWith('作業:') ||
-                           text.startsWith('📌');
+                           text.includes('考試:') || 
+                           text.includes('考試：') || 
+                           text.includes('作業:') ||
+                           text.includes('作業：') ||
+                           text.includes('📌');
+
+        console.log(`Is Reminder Trigger Match: ${isReminder}`);
 
         if (isReminder) {
           const parsed = parseReminder(text);
@@ -171,8 +187,12 @@ module.exports = async (req, res) => {
             createdAt: timestamp
           };
 
+          console.log('Successfully Parsed Calendar Event:', JSON.stringify(newEvent));
           calendar.push(newEvent);
+          parsedEventsCount++;
         }
+      } else {
+        console.log('Skipping event (not a text message event).');
       }
     }
 
