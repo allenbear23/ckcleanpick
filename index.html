@@ -3179,36 +3179,15 @@
 
             const bubbleContents = [];
 
-            // 1. Cadres box section
-            const cadreRows = [];
-            [
+            // 1. Cadres text section
+            const cadresList = [
                 ["衛生股長", roles.hygieneLead],
                 ["環保股長", roles.envLead],
                 ["衛生幹事", roles.hygieneOfficer]
-            ].forEach(([title, obj]) => {
-                cadreRows.push({
-                    type: "box",
-                    layout: "horizontal",
-                    margin: "sm",
-                    contents: [
-                        {
-                            type: "text",
-                            text: title,
-                            size: "xs",
-                            color: "#9ca3af",
-                            flex: 3
-                        },
-                        {
-                            type: "text",
-                            text: obj ? `${pad2(obj.seat)} ${obj.name}` : "（未指定）",
-                            size: "xs",
-                            color: "#f3f4f6",
-                            weight: "bold",
-                            flex: 7
-                        }
-                    ]
-                });
-            });
+            ];
+            const cadreText = cadresList.map(([title, obj]) => {
+                return `• ${title}：${obj ? `(${pad2(obj.seat)}) ${obj.name}` : "（未指定）"}`;
+            }).join("\n");
 
             bubbleContents.push({
                 type: "text",
@@ -3218,55 +3197,25 @@
                 color: "#3b82f6"
             });
             bubbleContents.push({
-                type: "box",
-                layout: "vertical",
+                type: "text",
+                text: cadreText,
+                size: "xs",
+                color: "#f3f4f6",
                 margin: "md",
-                contents: cadreRows
+                wrap: true
             });
             bubbleContents.push({
                 type: "separator",
                 margin: "lg"
             });
 
-            // 2. Sweep Areas box section (Sleek Interactive rows)
-            const areaRows = [];
-            latestResults.forEach(a => {
-                areaRows.push({
-                    type: "box",
-                    layout: "horizontal",
-                    margin: "md",
-                    contents: [
-                        {
-                            type: "text",
-                            text: `📍 ${a.name}`,
-                            size: "xs",
-                            color: "#a78bfa",
-                            weight: "bold",
-                            wrap: true
-                        }
-                    ]
-                });
-
-                if (a.members.length === 0) {
-                    areaRows.push({
-                        type: "text",
-                        text: "  （目前缺員）",
-                        size: "xs",
-                        color: "#9ca3af",
-                        margin: "xs"
-                    });
-                } else {
-                    a.members.forEach(m => {
-                        areaRows.push({
-                            type: "text",
-                            text: `  (${pad2(m.seat)}) ${m.name}`,
-                            size: "xs",
-                            color: "#f3f4f6",
-                            margin: "sm"
-                        });
-                    });
-                }
-            });
+            // 2. Sweep Areas text section (Consolidated to avoid component limit)
+            const areaSummaryText = latestResults.map(a => {
+                const membersStr = a.members.length > 0 
+                    ? a.members.map(m => `(${pad2(m.seat)}) ${m.name}`).join("、")
+                    : "（目前缺員）";
+                return `📍 ${a.name}\n   👉 ${membersStr}`;
+            }).join("\n\n");
 
             bubbleContents.push({
                 type: "text",
@@ -3277,9 +3226,12 @@
                 margin: "lg"
             });
             bubbleContents.push({
-                type: "box",
-                layout: "vertical",
-                contents: areaRows
+                type: "text",
+                text: areaSummaryText,
+                size: "xs",
+                color: "#f3f4f6",
+                margin: "md",
+                wrap: true
             });
             bubbleContents.push({
                 type: "separator",
@@ -3305,7 +3257,7 @@
                 wrap: true
             });
 
-            // 4. 公平性追蹤排行榜區塊
+            // 4. Fairness tracking stats
             let studentHistoryFlex = JSON.parse(localStorage.getItem('clean_pick_student_history') || '{}');
             let roundCounterFlex = parseInt(localStorage.getItem('clean_pick_round_counter') || '0', 10);
             const statsListFlex = Object.values(studentHistoryFlex).filter(s => {
@@ -3338,30 +3290,18 @@
                 });
 
                 const top3 = sortedFlex.slice(0, 3);
-                top3.forEach((s, idx) => {
+                const statsSummaryText = top3.map((s, idx) => {
                     const medal = idx === 0 ? "👑 " : `${idx + 1}. `;
-                    bubbleContents.push({
-                        type: "box",
-                        layout: "horizontal",
-                        margin: "md",
-                        contents: [
-                            {
-                                type: "text",
-                                text: `${medal}座號 ${s.seat} ${s.name}`,
-                                size: "xs",
-                                color: "#f3f4f6",
-                                flex: 6
-                            },
-                            {
-                                type: "text",
-                                text: `連休 ${s.consecutiveStandby} 輪/累計 ${s.drawCount} 次`,
-                                size: "xs",
-                                color: "#9ca3af",
-                                align: "end",
-                                flex: 6
-                            }
-                        ]
-                    });
+                    return `${medal}座號 ${s.seat} ${s.name} (連休 ${s.consecutiveStandby} 輪 / 累計 ${s.drawCount} 次)`;
+                }).join("\n");
+
+                bubbleContents.push({
+                    type: "text",
+                    text: statsSummaryText,
+                    size: "xs",
+                    color: "#f3f4f6",
+                    margin: "md",
+                    wrap: true
                 });
             }
 
