@@ -1501,6 +1501,7 @@
         <div class="tabs" id="tabsContainer">
             <button class="tab-btn active" onclick="switchTab('lottery')" id="tabLotteryBtn">抽選分配主頁</button>
             <button class="tab-btn" onclick="switchTab('line-config')" id="tabLineBtn">Vercel 後端狀態 & 推送測試</button>
+            <button class="tab-btn" onclick="switchTab('calendar')" id="tabCalendarBtn">📅 班級智慧行事曆 (AI Calendar)</button>
         </div>
 
         <!-- Tab 1: Lottery Page (Full Single-page replicate of CK portal) -->
@@ -1851,6 +1852,108 @@
                 
                 <div class="note" style="margin-top: 15px; margin-bottom: 0;">
                     <b>Vercel KV 資料庫提示</b>：自動排程需要依賴持久化的雲端資料庫。請先前往您的 Vercel 儀表板中的 <b>Storage</b> 頁面點選建立 KV 資料庫，並連接 (Link) 至此專案，即可無縫啟用。
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Calendar Page -->
+        <div id="calendar-tab" class="view-section">
+            <div class="card">
+                <div class="card-title">
+                    <svg class="title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    📅 班級智慧行事曆 (AI Class Calendar)
+                </div>
+                <p style="font-size: 0.95rem; margin-bottom: 20px; line-height: 1.6; color: var(--text-secondary);">
+                    此行事曆能<b>自動讀取 LINE 群組內幹部的提醒訊息並自動解析</b>！幹部在 LINE 群組發言時，只要開頭包含 <b>「幹部提醒」、「#提醒」、「考試:」或「作業:」</b>，系統後台便會自動提取日程，讓全班同學隨時掌握最新考試與作業進度！
+                </p>
+
+                <!-- Webhook URL Box -->
+                <div style="background: rgba(59, 130, 246, 0.05); padding: 18px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.15); margin-bottom: 25px;">
+                    <div style="font-weight: 700; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        LINE Bot Webhook 接收端網址 (Webhook URL)：
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.15); padding: 8px 12px; border-radius: 4px; font-family: monospace; font-size: 0.9rem; overflow-x: auto; color: var(--primary); font-weight: bold; border: 1px dashed rgba(59, 130, 246, 0.3);" id="webhookUrlBox">
+                        載入中...
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px; line-height: 1.4;">
+                        💡 <b>設定說明</b>：請將上方網址複製並粘貼到您的 LINE Developers 控制台中的 <b>Webhook URL</b>，並開啟 <b>Use webhook</b> 功能。當幹部在群組留言提醒時，行事曆便會自動生成！
+                    </div>
+                </div>
+
+                <!-- Summary Stats Bar -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 6px; border: 1px solid var(--panel-border); text-align: center;">
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px;">📅 行事曆日程總數</div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #ffffff;" id="statTotalEvents">0</div>
+                    </div>
+                    <div style="background: rgba(239, 68, 68, 0.05); padding: 15px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.15); text-align: center;">
+                        <div style="font-size: 0.85rem; color: #f87171; margin-bottom: 5px;">📝 待辦考試 (Exams)</div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #ef4444;" id="statTotalExams">0</div>
+                    </div>
+                    <div style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.15); text-align: center;">
+                        <div style="font-size: 0.85rem; color: #60a5fa; margin-bottom: 5px;">📋 待繳作業 (Homework)</div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #3b82f6;" id="statTotalHomeworks">0</div>
+                    </div>
+                </div>
+
+                <!-- Manual Event Form (Collapsible) -->
+                <div class="card" id="manualEventCard" style="display: none; margin-bottom: 25px; border: 1px solid var(--primary); background: rgba(59, 130, 246, 0.02);">
+                    <div class="card-title" style="color: var(--primary); margin-bottom: 15px;">
+                        ＋ 手動新增班級日程事件
+                    </div>
+                    <form id="manualEventForm" onsubmit="submitManualEvent(event)" style="display: flex; flex-direction: column; gap: 15px;">
+                        <div class="grid-2">
+                            <div>
+                                <label style="display:block; margin-bottom: 5px; font-weight:600; font-size:0.85rem; color: var(--text-secondary);">📌 事件標題 (例如：考英文第六課單字)</label>
+                                <input type="text" id="evTitle" required placeholder="例如：物理實驗報告、數學第三單元小考..." style="width:100%; box-sizing:border-box;" />
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom: 5px; font-weight:600; font-size:0.85rem; color: var(--text-secondary);">📅 目標日期 (Date)</label>
+                                <input type="date" id="evDate" required style="width:100%; box-sizing:border-box;" />
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div>
+                                <label style="display:block; margin-bottom: 5px; font-weight:600; font-size:0.85rem; color: var(--text-secondary);">🏷️ 事件種類 (Category)</label>
+                                <select id="evType" style="width:100%; box-sizing:border-box; padding:10px; background:#111827; color:#fff; border:1px solid var(--panel-border); border-radius:4px; font-weight:600;">
+                                    <option value="exam">📝 考試 (Exam)</option>
+                                    <option value="homework">📋 作業 (Homework)</option>
+                                    <option value="event">📢 一般活動 (Event)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom: 5px; font-weight:600; font-size:0.85rem; color: var(--text-secondary);">🔑 授權密碼 (Vercel Push Password)</label>
+                                <input type="password" id="evPassword" placeholder="若後端設有 PUSH_PASSWORD 請輸入" style="width:100%; box-sizing:border-box;" />
+                            </div>
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom: 5px; font-weight:600; font-size:0.85rem; color: var(--text-secondary);">📝 備註詳細說明 (可留空)</label>
+                            <textarea id="evContent" rows="3" placeholder="例如：考試範圍為 P.12 - P.48，請同學在第二節課前完成準備..." style="width:100%; box-sizing:border-box; background:#111827; color:#fff; border:1px solid var(--panel-border); border-radius:4px; padding:10px; font-family:inherit;"></textarea>
+                        </div>
+                        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 5px;">
+                            <button type="button" class="btn-secondary" onclick="closeManualEventCard()">取消</button>
+                            <button type="submit" class="btn" style="background: var(--primary);">📥 發布日程</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Calendar View Toggle / Header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="font-weight: 800; font-size: 1.15rem; margin: 0; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                        <span style="display: inline-block; width: 4px; height: 16px; background: var(--primary); border-radius: 2px;"></span>
+                        📅 日程時間軸 & 清單 (Upcoming Timeline)
+                    </h3>
+                    <button class="btn" style="background: var(--primary); font-size: 0.85rem; padding: 6px 14px; border-radius: 4px; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);" onclick="openManualEventModal()">
+                        ＋ 新增日程
+                    </button>
+                </div>
+
+                <!-- Calendar Event Timeline / Grid list -->
+                <div id="calendarListContainer" style="display: flex; flex-direction: column; gap: 15px;">
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        正在從雲端載入班級行事曆事件...
+                    </div>
                 </div>
             </div>
         </div>
@@ -3179,15 +3282,36 @@
 
             const bubbleContents = [];
 
-            // 1. Cadres text section
-            const cadresList = [
+            // 1. Cadres box section
+            const cadreRows = [];
+            [
                 ["衛生股長", roles.hygieneLead],
                 ["環保股長", roles.envLead],
                 ["衛生幹事", roles.hygieneOfficer]
-            ];
-            const cadreText = cadresList.map(([title, obj]) => {
-                return `• ${title}：${obj ? `(${pad2(obj.seat)}) ${obj.name}` : "（未指定）"}`;
-            }).join("\n");
+            ].forEach(([title, obj]) => {
+                cadreRows.push({
+                    type: "box",
+                    layout: "horizontal",
+                    margin: "sm",
+                    contents: [
+                        {
+                            type: "text",
+                            text: title,
+                            size: "xs",
+                            color: "#9ca3af",
+                            flex: 3
+                        },
+                        {
+                            type: "text",
+                            text: obj ? `${pad2(obj.seat)} ${obj.name}` : "（未指定）",
+                            size: "xs",
+                            color: "#f3f4f6",
+                            weight: "bold",
+                            flex: 7
+                        }
+                    ]
+                });
+            });
 
             bubbleContents.push({
                 type: "text",
@@ -3197,25 +3321,55 @@
                 color: "#3b82f6"
             });
             bubbleContents.push({
-                type: "text",
-                text: cadreText,
-                size: "xs",
-                color: "#f3f4f6",
+                type: "box",
+                layout: "vertical",
                 margin: "md",
-                wrap: true
+                contents: cadreRows
             });
             bubbleContents.push({
                 type: "separator",
                 margin: "lg"
             });
 
-            // 2. Sweep Areas text section (Consolidated to avoid component limit)
-            const areaSummaryText = latestResults.map(a => {
-                const membersStr = a.members.length > 0 
-                    ? a.members.map(m => `(${pad2(m.seat)}) ${m.name}`).join("、")
-                    : "（目前缺員）";
-                return `📍 ${a.name}\n   👉 ${membersStr}`;
-            }).join("\n\n");
+            // 2. Sweep Areas box section (Sleek Interactive rows)
+            const areaRows = [];
+            latestResults.forEach(a => {
+                areaRows.push({
+                    type: "box",
+                    layout: "horizontal",
+                    margin: "md",
+                    contents: [
+                        {
+                            type: "text",
+                            text: `📍 ${a.name}`,
+                            size: "xs",
+                            color: "#a78bfa",
+                            weight: "bold",
+                            wrap: true
+                        }
+                    ]
+                });
+
+                if (a.members.length === 0) {
+                    areaRows.push({
+                        type: "text",
+                        text: "  （目前缺員）",
+                        size: "xs",
+                        color: "#9ca3af",
+                        margin: "xs"
+                    });
+                } else {
+                    a.members.forEach(m => {
+                        areaRows.push({
+                            type: "text",
+                            text: `  (${pad2(m.seat)}) ${m.name}`,
+                            size: "xs",
+                            color: "#f3f4f6",
+                            margin: "sm"
+                        });
+                    });
+                }
+            });
 
             bubbleContents.push({
                 type: "text",
@@ -3226,12 +3380,9 @@
                 margin: "lg"
             });
             bubbleContents.push({
-                type: "text",
-                text: areaSummaryText,
-                size: "xs",
-                color: "#f3f4f6",
-                margin: "md",
-                wrap: true
+                type: "box",
+                layout: "vertical",
+                contents: areaRows
             });
             bubbleContents.push({
                 type: "separator",
@@ -3257,7 +3408,7 @@
                 wrap: true
             });
 
-            // 4. Fairness tracking stats
+            // 4. 公平性追蹤排行榜區塊
             let studentHistoryFlex = JSON.parse(localStorage.getItem('clean_pick_student_history') || '{}');
             let roundCounterFlex = parseInt(localStorage.getItem('clean_pick_round_counter') || '0', 10);
             const statsListFlex = Object.values(studentHistoryFlex).filter(s => {
@@ -3290,18 +3441,30 @@
                 });
 
                 const top3 = sortedFlex.slice(0, 3);
-                const statsSummaryText = top3.map((s, idx) => {
+                top3.forEach((s, idx) => {
                     const medal = idx === 0 ? "👑 " : `${idx + 1}. `;
-                    return `${medal}座號 ${s.seat} ${s.name} (連休 ${s.consecutiveStandby} 輪 / 累計 ${s.drawCount} 次)`;
-                }).join("\n");
-
-                bubbleContents.push({
-                    type: "text",
-                    text: statsSummaryText,
-                    size: "xs",
-                    color: "#f3f4f6",
-                    margin: "md",
-                    wrap: true
+                    bubbleContents.push({
+                        type: "box",
+                        layout: "horizontal",
+                        margin: "md",
+                        contents: [
+                            {
+                                type: "text",
+                                text: `${medal}座號 ${s.seat} ${s.name}`,
+                                size: "xs",
+                                color: "#f3f4f6",
+                                flex: 6
+                            },
+                            {
+                                type: "text",
+                                text: `連休 ${s.consecutiveStandby} 輪/累計 ${s.drawCount} 次`,
+                                size: "xs",
+                                color: "#9ca3af",
+                                align: "end",
+                                flex: 6
+                            }
+                        ]
+                    });
                 });
             }
 
@@ -3461,6 +3624,10 @@
             } else if (tabName === 'line-config') {
                 document.getElementById('line-config-tab').classList.add('active');
                 document.getElementById('tabLineBtn').classList.add('active');
+            } else if (tabName === 'calendar') {
+                document.getElementById('calendar-tab').classList.add('active');
+                document.getElementById('tabCalendarBtn').classList.add('active');
+                loadCalendarEvents();
             }
             currentTab = tabName;
         }
@@ -3576,6 +3743,193 @@
                         conf.remove();
                     }
                 }, 16);
+            }
+        }
+
+        /* ===== AI Class Calendar (智慧行事曆) Client Logic ===== */
+        async function loadCalendarEvents() {
+            // Update Webhook URL display dynamically
+            const webhookUrl = `${window.location.origin}/api/webhook`;
+            const box = document.getElementById('webhookUrlBox');
+            if (box) {
+                box.innerText = webhookUrl;
+            }
+
+            const container = document.getElementById('calendarListContainer');
+            if (!container) return;
+
+            try {
+                const res = await fetch('/api/calendar');
+                const data = await res.json();
+
+                if (!data.success) {
+                    container.innerHTML = `<div style="text-align: center; padding: 25px; color: var(--danger); font-weight:bold;">❌ 載入失敗：${data.error || '未知錯誤'}</div>`;
+                    return;
+                }
+
+                const calendar = data.calendar || [];
+                
+                // Update stats counter
+                let examCount = 0;
+                let homeworkCount = 0;
+                
+                calendar.forEach(ev => {
+                    if (ev.type === 'exam') examCount++;
+                    else if (ev.type === 'homework') homeworkCount++;
+                });
+
+                document.getElementById('statTotalEvents').innerText = calendar.length;
+                document.getElementById('statTotalExams').innerText = examCount;
+                document.getElementById('statTotalHomeworks').innerText = homeworkCount;
+
+                if (calendar.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 50px 20px; color: var(--text-secondary); background: rgba(255,255,255,0.01); border-radius:8px; border:1px dashed var(--panel-border);">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--text-secondary); margin-bottom:15px; opacity:0.5;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <h4 style="margin:0 0 8px 0; color:#fff; font-weight:700;">🎁 班級行事曆目前空空如也</h4>
+                            <p style="margin:0; font-size:0.85rem; line-height:1.5;">沒有任何考試或作業提醒。請嘗試在群組內留言，例如：<br><span style="color:var(--primary); font-family:monospace; font-weight:bold;">幹部提醒：5/22（五）考英文第六課單字</span></p>
+                        </div>`;
+                    return;
+                }
+
+                // Render calendar timeline list
+                container.innerHTML = "";
+                
+                // Parse date relative status
+                const parseDateDiff = (dateStr) => {
+                    const now = new Date();
+                    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+                    const taipeiToday = new Date(utc + (3600000 * 8)); // UTC+8
+                    taipeiToday.setHours(0,0,0,0);
+                    
+                    const target = new Date(dateStr);
+                    target.setHours(0,0,0,0);
+                    
+                    const diffTime = target - taipeiToday;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    if (diffDays === 0) return { label: '今天 Today', style: 'background: var(--danger); color: white;' };
+                    if (diffDays === 1) return { label: '明天 Tomorrow', style: 'background: #f59e0b; color: white;' };
+                    if (diffDays === 2) return { label: '後天', style: 'background: #10b981; color: white;' };
+                    if (diffDays > 2) return { label: `${diffDays} 天後`, style: 'background: var(--primary); color: white;' };
+                    return { label: '已結束', style: 'background: rgba(255,255,255,0.08); color: var(--text-secondary); opacity:0.6;' };
+                };
+
+                calendar.forEach(ev => {
+                    const diff = parseDateDiff(ev.date);
+                    
+                    // Style attributes based on type
+                    let borderGlow = 'border: 1px solid var(--panel-border);';
+                    let typeBadge = '';
+                    if (ev.type === 'exam') {
+                        borderGlow = 'border: 1px solid rgba(239, 68, 68, 0.25); box-shadow: 0 0 15px rgba(239, 68, 68, 0.04), inset 0 0 8px rgba(239, 68, 68, 0.02);';
+                        typeBadge = `<span style="background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">📝 考試 Exam</span>`;
+                    } else if (ev.type === 'homework') {
+                        borderGlow = 'border: 1px solid rgba(59, 130, 246, 0.25); box-shadow: 0 0 15px rgba(59, 130, 246, 0.04), inset 0 0 8px rgba(59, 130, 246, 0.02);';
+                        typeBadge = `<span style="background: rgba(59, 130, 246, 0.12); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">📋 作業 HW</span>`;
+                    } else {
+                        borderGlow = 'border: 1px solid rgba(16, 185, 129, 0.25); box-shadow: 0 0 15px rgba(16, 185, 129, 0.04), inset 0 0 8px rgba(16, 185, 129, 0.02);';
+                        typeBadge = `<span style="background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">📢 一般活動</span>`;
+                    }
+
+                    const evCard = document.createElement('div');
+                    evCard.style.cssText = `background: rgba(255,255,255,0.01); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 10px; transition: transform 0.2s ease; ${borderGlow}`;
+                    evCard.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                ${typeBadge}
+                                <span class="ts-badge" style="font-size:0.8rem; font-weight:700; ${diff.style}">${diff.label}</span>
+                                <span style="font-family: monospace; font-size: 0.9rem; color: var(--text-secondary); font-weight:600;">📅 ${ev.date}</span>
+                            </div>
+                            <button class="btn-danger" style="font-size: 0.75rem; padding: 4px 10px; border-radius: 4px;" onclick="deleteCalendarEvent('${ev.id}')">
+                                🗑️ 刪除
+                            </button>
+                        </div>
+                        
+                        <div style="font-size: 1.05rem; font-weight: 700; color: #ffffff; line-height: 1.4; word-break: break-all;">
+                            ${escapeHtml(ev.title)}
+                        </div>
+                        
+                        ${ev.content && ev.content !== ev.title ? `
+                        <div style="background: rgba(0,0,0,0.15); padding: 10px 14px; border-radius: 4px; font-size: 0.85rem; line-height: 1.5; color: var(--text-secondary); word-break: break-all; border-left: 3px solid var(--panel-border);">
+                            💬 LINE 原始推播：<br>${escapeHtml(ev.content)}
+                        </div>` : ''}
+                        
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); border-top: 1px solid rgba(255,255,255,0.02); padding-top: 8px;">
+                            <span>👤 發佈者：${escapeHtml(ev.sender || 'Group Officer')}</span>
+                            <span>⏱️ 同步時間：${ev.createdAt}</span>
+                        </div>
+                    `;
+                    container.appendChild(evCard);
+                });
+
+            } catch (error) {
+                container.innerHTML = `<div style="text-align: center; padding: 25px; color: var(--danger); font-weight:bold;">❌ 無法連接 API 伺服器：${error.message}</div>`;
+            }
+        }
+
+        async function deleteCalendarEvent(id) {
+            const password = prompt('請輸入 Vercel PUSH_PASSWORD 授權密碼以確認刪除該日程：');
+            if (password === null) return; // cancelled
+
+            try {
+                const res = await fetch('/api/calendar', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, password })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    showToast(data.error || '密碼錯誤，您無權刪除日程！', 'error');
+                    return;
+                }
+
+                showToast('日程已成功自雲端資料庫刪除！');
+                loadCalendarEvents();
+            } catch (err) {
+                showToast('刪除失敗，無法連接伺服器！', 'error');
+            }
+        }
+
+        function openManualEventModal() {
+            document.getElementById('manualEventCard').style.display = 'block';
+            document.getElementById('evDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('evTitle').focus();
+        }
+
+        function closeManualEventCard() {
+            document.getElementById('manualEventCard').style.display = 'none';
+            document.getElementById('manualEventForm').reset();
+        }
+
+        async function submitManualEvent(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('evTitle').value.trim();
+            const date = document.getElementById('evDate').value;
+            const type = document.getElementById('evType').value;
+            const content = document.getElementById('evContent').value.trim();
+            const password = document.getElementById('evPassword').value;
+
+            try {
+                const res = await fetch('/api/calendar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, date, type, content, password })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    showToast(data.error || '發布失敗，請確認密碼是否正確！', 'error');
+                    return;
+                }
+
+                showToast('日程事件發布成功！已自動同步至雲端行事曆。');
+                closeManualEventCard();
+                loadCalendarEvents();
+            } catch (err) {
+                showToast('發布失敗，連線異常！', 'error');
             }
         }
     </script>
