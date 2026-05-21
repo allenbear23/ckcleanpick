@@ -1881,6 +1881,89 @@
                     </div>
                 </div>
 
+                <!-- Google Calendar Subscription Integration Box -->
+                <div style="background: rgba(16, 185, 129, 0.04); padding: 20px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.18); margin-bottom: 25px; backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+                    <div style="font-weight: 700; color: #34d399; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 1.05rem;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
+                        🔌 一鍵串接 Google / Apple 個人日曆 (iCal Real-time Sync)：
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 12px 0; line-height: 1.5;">
+                        無需登入！直接將下方的 <b>iCal 訂閱連結</b> 加入到您的個人 Google 或 Apple 日曆中，班級行事曆的考試與作業日程將會<b>自動即時同步</b>至您的手機與電腦！
+                    </p>
+                    <div style="display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.20); padding: 10px 14px; border-radius: 6px; font-family: monospace; font-size: 0.9rem; border: 1px solid rgba(16, 185, 129, 0.25);">
+                        <div style="flex: 1; overflow-x: auto; white-space: nowrap; color: #34d399; font-weight: bold; padding-right: 10px;" id="icalUrlBox">
+                            載入中...
+                        </div>
+                        <button type="button" class="btn" style="background: #10b981; font-size: 0.75rem; padding: 6px 12px; border-radius: 4px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2); flex-shrink: 0; min-height: auto; margin:0;" onclick="copyIcalUrl()">
+                            📋 複製網址
+                        </button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; margin-top: 15px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div>
+                            <div style="font-size: 0.8rem; font-weight: 700; color: #ffffff; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                                🖥️ Google 日曆 (電腦版) 新增步驟：
+                            </div>
+                            <ol style="font-size: 0.75rem; color: var(--text-secondary); margin: 0; padding-left: 15px; line-height: 1.5;">
+                                <li>點擊按鈕複製 <b>iCal 訂閱網址</b>。</li>
+                                <li>開啟 <a href="https://calendar.google.com" target="_blank" style="color: #34d399; text-decoration: underline;">Google 日曆</a> 網頁版。</li>
+                                <li>點擊左側「其他日曆」旁的 <b>「＋」</b>，選取 <b>「從網址新增」</b>。</li>
+                                <li>貼上連結並點選 <b>「新增日曆」</b> 即可！</li>
+                            </ol>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.8rem; font-weight: 700; color: #ffffff; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                                📱 手機 App (iPhone / Android) 同步：
+                            </div>
+                            <ol style="font-size: 0.75rem; color: var(--text-secondary); margin: 0; padding-left: 15px; line-height: 1.5;">
+                                <li><b>iPhone / iPad</b>: 可直接使用 iOS 內建「行事曆」App ➔ 「加入日曆」 ➔ 「加入訂閱行事曆」 ➔ 貼上此網址。</li>
+                                <li><b>Android</b>: 在電腦版 Google 日曆新增後，打開手機上的 Google 日曆 App ➔ 「設定」 ➔ 「帳戶」 ➔ 勾選該日曆並點選「同步」即可！</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Google Service Account Write Integration Guide -->
+                    <details style="margin-top: 15px; background: rgba(0,0,0,0.25); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); overflow: hidden;">
+                        <summary style="font-size: 0.8rem; font-weight: 700; color: #34d399; padding: 10px 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none;">
+                            <span style="display: flex; align-items: center; gap: 6px;">
+                                🔑 <b>進階指引：如何將日程「自動寫入」現有的 Google 日曆中？</b>
+                            </span>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary);">▼ 點擊展開教學</span>
+                        </summary>
+                        <div style="padding: 14px; font-size: 0.75rem; color: var(--text-secondary); line-height: 1.6; border-top: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.15);">
+                            <p style="margin: 0 0 10px 0; color: #ffffff; font-weight: 600;">
+                                💡 本系統支援「方案 B」：當 LINE 群組幹部提醒或網頁手動發布日程時，全自動且即時地新增/刪除您現有 Google 日曆上的事件！請按照以下步驟完成 Google 雲端設定：
+                            </p>
+                            <ol style="margin: 0; padding-left: 16px;">
+                                <li style="margin-bottom: 8px;">
+                                    <b>建立 Google 服務帳號 (Service Account)</b>：
+                                    <br>前往 <a href="https://console.cloud.google.com/" target="_blank" style="color: #34d399; text-decoration: underline;">Google Cloud Console</a> ➔ 建立新專案 ➔ 前往「API 和服務」啟用 <b>Google Calendar API</b> ➔ 前往「憑證」點選「建立憑證」選取<b>服務帳號 (Service Account)</b>。
+                                </li>
+                                <li style="margin-bottom: 8px;">
+                                    <b>下載私鑰並獲取 Email</b>：
+                                    <br>建立服務帳號後，複製其產生的電子郵件（通常為 <code>xxx@xxx.iam.gserviceaccount.com</code>） ➔ 點入該服務帳號的「金鑰 (Keys)」頁籤 ➔ 點選「新增金鑰」➔ 選擇 <b>JSON</b> 並下載。
+                                </li>
+                                <li style="margin-bottom: 8px;">
+                                    <b>共用共享您的 Google 日曆</b>：
+                                    <br>打開您要寫入的現有 Google 日曆 ➔ 進入「設定與共用」 ➔ 找到「與特定人士或群組共用」 ➔ 點選「新增共用對象」 ➔ 貼上剛才複製的<b>服務帳號 Email</b> ➔ 權限設為 <b>「做出變更並管理共用」</b> 或 <b>「做出變更事件」</b>。
+                                </li>
+                                <li style="margin-bottom: 8px;">
+                                    <b>在 Vercel 中配置環境變數</b>：
+                                    <br>將下載的金鑰 JSON 檔案打開，將內容設定至 Vercel 儀表板中的 <b>Environment Variables</b>：
+                                    <ul style="margin: 4px 0 0 0; padding-left: 16px; list-style-type: circle;">
+                                        <li>🔑 <code>GOOGLE_SERVICE_ACCOUNT_EMAIL</code>：貼上您的服務帳號 Email。</li>
+                                        <li>🔑 <code>GOOGLE_PRIVATE_KEY</code>：貼上 JSON 中的 <code>private_key</code> 完整內容（包含 <code>-----BEGIN PRIVATE KEY-----</code> 標頭）。</li>
+                                        <li>🔑 <code>GOOGLE_CALENDAR_ID</code>：貼上您的 Google 日曆 ID（個人預設日曆即為您的 Gmail；共用日曆可在日曆設定的「整合日曆」區塊找到「日曆 ID」）。</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                            <div style="margin-top: 10px; padding: 8px; background: rgba(52, 211, 153, 0.05); border: 1px solid rgba(52, 211, 153, 0.15); border-radius: 4px; color: #34d399;">
+                                🛡️ <b>安全提示</b>：金鑰僅安全儲存於 Vercel 雲端後端，前端網頁與任何外部人員皆無法取得，請放心設定。
+                            </div>
+                        </div>
+                    </details>
+                </div>
+
+
                 <!-- Summary Stats Bar -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px;">
                     <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 6px; border: 1px solid var(--panel-border); text-align: center;">
@@ -3747,12 +3830,29 @@
         }
 
         /* ===== AI Class Calendar (智慧行事曆) Client Logic ===== */
+        function copyIcalUrl() {
+            const url = `${window.location.origin}/api/ics`;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('📋 已複製 iCal 訂閱連結！請依照說明加入 Google/Apple 日曆。');
+            }).catch(err => {
+                console.error('Failed to copy URL:', err);
+                showToast('❌ 複製失敗，請手動選取複製。', 'danger');
+            });
+        }
+
         async function loadCalendarEvents() {
             // Update Webhook URL display dynamically
             const webhookUrl = `${window.location.origin}/api/webhook`;
             const box = document.getElementById('webhookUrlBox');
             if (box) {
                 box.innerText = webhookUrl;
+            }
+
+            // Update iCal URL display dynamically
+            const icalUrl = `${window.location.origin}/api/ics`;
+            const icalBox = document.getElementById('icalUrlBox');
+            if (icalBox) {
+                icalBox.innerText = icalUrl;
             }
 
             const container = document.getElementById('calendarListContainer');

@@ -1,6 +1,7 @@
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 const hasKV = !!(KV_URL && KV_TOKEN);
+const gcal = require('./gcal');
 
 async function getKV(key) {
   if (!hasKV) return null;
@@ -186,6 +187,20 @@ module.exports = async (req, res) => {
             sender: event.source.userId || 'Group Officer',
             createdAt: timestamp
           };
+
+          // Automatically sync to Google Calendar if configured
+          if (gcal.isConfigured) {
+            try {
+              console.log('Attempting to sync LINE reminder to Google Calendar...');
+              const gcalEventId = await gcal.insertGoogleEvent(newEvent);
+              if (gcalEventId) {
+                newEvent.gcalEventId = gcalEventId;
+                console.log(`LINE reminder synced successfully to Google Calendar. Event ID: ${gcalEventId}`);
+              }
+            } catch (gcalErr) {
+              console.error('Google Calendar Webhook Auto-sync Error:', gcalErr);
+            }
+          }
 
           console.log('Successfully Parsed Calendar Event:', JSON.stringify(newEvent));
           calendar.push(newEvent);

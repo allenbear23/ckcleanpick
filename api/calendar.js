@@ -1,6 +1,7 @@
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 const hasKV = !!(KV_URL && KV_TOKEN);
+const gcal = require('./gcal');
 
 async function getKV(key) {
   if (!hasKV) return null;
@@ -77,6 +78,20 @@ module.exports = async (req, res) => {
         createdAt: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
       };
 
+      // Automatically sync to Google Calendar if configured
+      if (gcal.isConfigured) {
+        try {
+          console.log('Attempting to sync manual event to Google Calendar...');
+          const gcalEventId = await gcal.insertGoogleEvent(newEvent);
+          if (gcalEventId) {
+            newEvent.gcalEventId = gcalEventId;
+            console.log(`Manual event synced successfully to Google Calendar. Event ID: ${gcalEventId}`);
+          }
+        } catch (gcalErr) {
+          console.error('Google Calendar Manual Sync Error:', gcalErr);
+        }
+      }
+
       calendar.push(newEvent);
       calendar.sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -100,6 +115,18 @@ module.exports = async (req, res) => {
       }
 
       const calendar = await getKV('clean_class_calendar') || [];
+      const eventToDelete = calendar.find(ev => ev.id === id);
+
+      // Automatically delete from Google Calendar if configured and exists
+      if (eventToDelete && eventToDelete.gcalEventId && gcal.isConfigured) {
+        try {
+          console.log(`Attempting to delete event from Google Calendar. ID: ${eventToDelete.gcalEventId}...`);
+          await gcal.deleteGoogleEvent(eventToDelete.gcalEventId);
+        } catch (gcalErr) {
+          console.error('Google Calendar Manual Delete Error:', gcalErr);
+        }
+      }
+
       const updatedCalendar = calendar.filter(ev => ev.id !== id);
 
       if (hasKV) {
