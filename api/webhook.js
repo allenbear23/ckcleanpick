@@ -136,18 +136,29 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // ✅ Fix 1: Immediately respond 200 to LINE to prevent timeout (LINE requires <1s response)
+  // Processing continues asynchronously after response is sent
+  res.status(200).json({ status: 'ok' });
+
   try {
+    // ✅ Fix 2: Safe body parsing — handle raw string body if JSON middleware wasn't applied
+    let body = req.body;
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch (e) { body = {}; }
+    }
+    if (!body) body = {};
+
     console.log('=== Incoming Webhook Request ===');
     console.log('Method:', req.method);
     console.log('KV Configured:', hasKV);
-    console.log('Payload Body:', JSON.stringify(req.body));
+    console.log('Payload Body:', JSON.stringify(body));
 
-    const { events } = req.body;
+    const { events } = body;
 
     // Handle LINE verification check
     if (!events || events.length === 0) {
       console.log('Empty events payload received (LINE verification or keepalive).');
-      return res.status(200).json({ status: 'ok', message: 'No events found.' });
+      return;
     }
 
     const calendar = await getKV('clean_class_calendar') || [];
@@ -163,14 +174,24 @@ module.exports = async (req, res) => {
         const text = event.message.text.trim();
         console.log(`Extracted Message Text: "${text}"`);
 
-        // Check if message is a cadre reminder (trigger keywords anywhere in text)
-        const isReminder = text.includes('幹部提醒') || 
-                           text.includes('#提醒') || 
-                           text.includes('考試:') || 
-                           text.includes('考試：') || 
+        // ✅ Fix 3: Expanded trigger keywords — catch more reminder formats
+        const isReminder = text.includes('幹部提醒') ||
+                           text.includes('#提醒') ||
+                           text.includes('＃提醒') ||   // 全形 ＃
+                           text.includes('📌') ||
+                           text.includes('📍') ||
+                           text.includes('🔔') ||
+                           text.includes('⚠️') ||
+                           text.includes('考試:') ||
+                           text.includes('考試：') ||
                            text.includes('作業:') ||
                            text.includes('作業：') ||
-                           text.includes('📌');
+                           text.includes('提醒大家') ||
+                           text.includes('提醒同學') ||
+                           text.includes('明天考') ||
+                           text.includes('明天要交') ||
+                           text.includes('明天繳') ||
+                           /^(考試|小考|聽寫|默寫|作業|繳交|報告)/.test(text); // 以這些詞開頭
 
         console.log(`Is Reminder Trigger Match: ${isReminder}`);
 
@@ -221,9 +242,9 @@ module.exports = async (req, res) => {
       await setKV('clean_class_calendar', truncatedCalendar);
     }
 
-    return res.status(200).json({ status: 'ok', parsedCount: events.length });
+    console.log(`Webhook processing complete. Parsed ${parsedEventsCount} reminder(s) from ${events.length} event(s).`);
   } catch (error) {
     console.error('Webhook processing failure:', error);
-    return res.status(500).json({ error: 'Internal server error', message: error.message });
+    // Note: Cannot send error response here as headers already sent
   }
 };
